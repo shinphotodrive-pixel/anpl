@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Menu, X, Sliders, Layers, Database, Calculator, GitBranch } from 'lucide-react';
+import { Car, Menu, X, Sliders, Layers, Database, Calculator, GitBranch, Zap, Bookmark } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -11,6 +11,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
   const navItems = [
     { id: 'simulator', label: '증강 시뮬레이터', icon: Sliders },
+    { id: 'presets', label: '프리셋 라이브러리', icon: Bookmark },
+    { id: 'testbench', label: '인식 테스트 랩', icon: Zap },
     { id: 'solutions', label: '4대 해결 전략', icon: Layers },
     { id: 'challenges', label: '챌린지 매트릭스', icon: Database },
     { id: 'pipeline', label: 'MLOps 파이프라인', icon: GitBranch },

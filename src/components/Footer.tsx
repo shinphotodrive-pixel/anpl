@@ -36,6 +36,16 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
+                <a href="#presets" className="hover:text-white transition-colors">
+                  환경 프리셋 라이브러리 (Preset Library)
+                </a>
+              </li>
+              <li>
+                <a href="#testbench" className="hover:text-white transition-colors">
+                  인식 시험 & 배치 테스트 랩
+                </a>
+              </li>
+              <li>
                 <a href="#solutions" className="hover:text-white transition-colors">
                   4대 핵심 해결 전략 (합성데이터/능동학습)
                 </a>

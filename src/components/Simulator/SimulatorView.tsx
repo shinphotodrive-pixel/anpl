@@ -11,11 +11,20 @@ import { InferenceAnalysis } from './InferenceAnalysis';
 import { CodeViewer } from './CodeViewer';
 import { Sliders, Code2, Cpu } from 'lucide-react';
 
-export const SimulatorView: React.FC = () => {
+import { PresetLibrary } from './PresetLibrary';
+import { AugmentationProfile } from '../../types/alpr';
+
+interface SimulatorViewProps {
+  sharedParams?: AugmentationParams;
+  setSharedParams?: React.Dispatch<React.SetStateAction<AugmentationParams>>;
+}
+
+export const SimulatorView: React.FC<SimulatorViewProps> = ({ sharedParams, setSharedParams }) => {
   const [plateText, setPlateText] = useState('123가 4567');
   const [plateType, setPlateType] = useState<PlateType>('white_8');
   const [showBBox, setShowBBox] = useState(true);
   const [activePreset, setActivePreset] = useState<PresetType>('original');
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [activeBottomTab, setActiveBottomTab] = useState<'metrics' | 'code'>('metrics');
 
   const defaultParams: AugmentationParams = {
@@ -32,16 +41,29 @@ export const SimulatorView: React.FC = () => {
     glare: 0,
   };
 
-  const [params, setParams] = useState<AugmentationParams>(defaultParams);
+  const [internalParams, setInternalParams] = useState<AugmentationParams>(defaultParams);
+  const params = sharedParams ?? internalParams;
+  const setParams = setSharedParams ?? setInternalParams;
 
   const handleSetParams: React.Dispatch<React.SetStateAction<AugmentationParams>> = (action) => {
     setActivePreset('custom');
+    setActiveProfileId(null);
     setParams(action);
+  };
+
+  const handleApplyProfile = (profile: AugmentationProfile) => {
+    setActiveProfileId(profile.id);
+    setActivePreset('custom');
+    setParams(profile.params);
+    if (profile.plateType) {
+      setPlateType(profile.plateType);
+    }
   };
 
   // Apply quick preset
   const applyPreset = (preset: PresetType) => {
     setActivePreset(preset);
+    setActiveProfileId(null);
     switch (preset) {
       case 'original':
         setParams(defaultParams);
@@ -153,10 +175,18 @@ export const SimulatorView: React.FC = () => {
           </p>
         </div>
 
+        {/* Preset Library (Save, Load, Export/Import Profiles) */}
+        <PresetLibrary
+          currentParams={params}
+          currentPlateType={plateType}
+          onApplyProfile={handleApplyProfile}
+          activeProfileId={activeProfileId}
+        />
+
         {/* 2-Column Main Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Visual Canvas Stage */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
+          {/* Left Column: Visual Canvas Stage with Side-by-Side Comparison */}
+          <div className="lg:col-span-6 flex flex-col gap-4">
             <PlateRenderer
               plateText={plateText}
               plateType={plateType}
@@ -164,20 +194,21 @@ export const SimulatorView: React.FC = () => {
               showBBox={showBBox}
               detected={inferenceResult.detected}
               overallConfidence={inferenceResult.overallConfidence}
+              sharpnessScore={inferenceResult.sharpnessScore}
             />
 
             {/* Quick Helper Note */}
             <div className="p-4 bg-white rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed shadow-sm">
               <strong className="text-slate-800 font-semibold block mb-1">
-                💡 실세계 현장 데이터의 가치:
+                💡 실시간 원본 vs 증강본 비교:
               </strong>
-              일반 도로 주행 중에는 맑은 주간 데이터가 90% 이상을 차지합니다. 
-              증강 파이프라인(Augmentation Pipeline)을 적용하지 않으면 모델이 특정 날씨와 각도에 과적합(Overfitting)되어 실제 단속 현장에서 오인식 사고를 유발합니다.
+              상단 뷰 스위처를 통해 <strong>[나란히 비교]</strong> 또는 <strong>[스플릿 슬라이더]</strong>를 선택하면, 
+              증강 파라미터가 실제 번호판의 획 분할(Segmentation) 및 광학적 에지에 미치는 파괴적 영향을 시각적으로 직접 검증할 수 있습니다.
             </div>
           </div>
 
           {/* Right Column: Controls Panel */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-6">
             <SimulatorControls
               plateText={plateText}
               setPlateText={setPlateText}

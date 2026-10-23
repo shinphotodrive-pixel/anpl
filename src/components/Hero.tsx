@@ -1,12 +1,19 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark } from 'lucide-react';
 
 interface HeroProps {
   onScrollToSimulator: () => void;
+  onScrollToPresets?: () => void;
+  onScrollToTestBench: () => void;
   onScrollToSolutions: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onScrollToSimulator, onScrollToSolutions }) => {
+export const Hero: React.FC<HeroProps> = ({ 
+  onScrollToSimulator, 
+  onScrollToPresets,
+  onScrollToTestBench, 
+  onScrollToSolutions 
+}) => {
   return (
     <div className="relative bg-slate-900 text-white overflow-hidden border-b border-slate-800">
       {/* Background ambient decorative grid */}
@@ -67,21 +74,39 @@ export const Hero: React.FC<HeroProps> = ({ onScrollToSimulator, onScrollToSolut
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5">
           <button
             onClick={onScrollToSimulator}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Sliders className="w-4 h-4 text-slate-950" />
-            <span>증강 시뮬레이터 시작</span>
+            <span>증강 시뮬레이터</span>
+          </button>
+
+          {onScrollToPresets && (
+            <button
+              onClick={onScrollToPresets}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold px-5 py-3 rounded-xl transition-all hover:text-white hover:border-slate-600"
+            >
+              <Bookmark className="w-4 h-4 text-sky-400" />
+              <span>환경 프리셋 라이브러리</span>
+            </button>
+          )}
+
+          <button
+            onClick={onScrollToTestBench}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Sparkles className="w-4 h-4 text-sky-300" />
+            <span>인식 시험 테스트 랩</span>
           </button>
 
           <button
             onClick={onScrollToSolutions}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold px-6 py-3.5 rounded-xl transition-all hover:text-white"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold px-5 py-3 rounded-xl transition-all hover:text-white"
           >
             <AlertCircle className="w-4 h-4 text-sky-400" />
-            <span>4대 해결 전략 탐색</span>
+            <span>4대 해결 전략</span>
             <ArrowDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </button>
         </div>

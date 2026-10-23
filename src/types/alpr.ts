@@ -25,6 +25,18 @@ export interface AugmentationParams {
   glare: number; // 0 to 100%
 }
 
+export interface AugmentationProfile {
+  id: string;
+  name: string;
+  category: 'weather' | 'night' | 'motion' | 'camera' | 'condition' | 'custom';
+  categoryLabel?: string;
+  description: string;
+  params: AugmentationParams;
+  plateType?: PlateType;
+  isBuiltIn?: boolean;
+  createdAt?: string;
+}
+
 export interface CharConfidence {
   expected: string;
   predicted: string;

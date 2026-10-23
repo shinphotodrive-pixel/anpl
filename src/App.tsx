@@ -7,14 +7,33 @@ import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { SimulatorView } from './components/Simulator/SimulatorView';
+import { PresetLibrarySection } from './components/PresetLibrary/PresetLibrarySection';
+import { TestBenchSection } from './components/TestBench/TestBenchSection';
 import { SolutionsView } from './components/Solutions/SolutionsView';
 import { ChallengeMatrix } from './components/ChallengeMatrix';
 import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { RoiCalculator } from './components/RoiCalculator';
+import { AugmentationParams, PlateType } from './types/alpr';
 import { Footer } from './components/Footer';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('simulator');
+
+  const defaultParams: AugmentationParams = {
+    blur: 0,
+    brightness: 100,
+    contrast: 100,
+    noise: 0,
+    rotate: 0,
+    perspectiveX: 0,
+    perspectiveY: 0,
+    rain: 0,
+    fog: 0,
+    dirt: 0,
+    glare: 0,
+  };
+
+  const [params, setParams] = useState<AugmentationParams>(defaultParams);
 
   const scrollToSection = (id: string) => {
     setActiveTab(id);
@@ -22,6 +41,10 @@ export default function App() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleApplyPreset = (newParams: AugmentationParams, _plateType?: PlateType) => {
+    setParams(newParams);
   };
 
   return (
@@ -34,22 +57,30 @@ export default function App() {
         {/* Hero Section */}
         <Hero
           onScrollToSimulator={() => scrollToSection('simulator')}
+          onScrollToPresets={() => scrollToSection('presets')}
+          onScrollToTestBench={() => scrollToSection('testbench')}
           onScrollToSolutions={() => scrollToSection('solutions')}
         />
 
         {/* 1. Interactive Augmentation Simulator */}
-        <SimulatorView />
+        <SimulatorView sharedParams={params} setSharedParams={setParams} />
 
-        {/* 2. 4 Core Production Strategies */}
+        {/* 2. Standard Environmental Preset Library */}
+        <PresetLibrarySection currentParams={params} onApplyPreset={handleApplyPreset} />
+
+        {/* 3. ALPR Recognition Testing & Benchmark Lab */}
+        <TestBenchSection currentParams={params} />
+
+        {/* 3. 4 Core Production Strategies */}
         <SolutionsView />
 
-        {/* 3. ALPR Dataset Challenge Matrix */}
+        {/* 4. ALPR Dataset Challenge Matrix */}
         <ChallengeMatrix />
 
-        {/* 4. End-to-End MLOps Pipeline Visualizer */}
+        {/* 5. End-to-End MLOps Pipeline Visualizer */}
         <PipelineVisualizer />
 
-        {/* 5. Dataset ROI & Cost Feasibility Calculator */}
+        {/* 6. Dataset ROI & Cost Feasibility Calculator */}
         <RoiCalculator />
       </main>
 
