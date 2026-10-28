@@ -4,7 +4,8 @@ import {
   BUILT_IN_PROFILES, 
   getStoredCustomProfiles, 
   saveCustomProfileToStorage, 
-  deleteCustomProfileFromStorage 
+  deleteCustomProfileFromStorage,
+  subscribeToCustomProfiles 
 } from '../../data/presetProfiles';
 import { 
   Bookmark, 
@@ -52,10 +53,15 @@ export const PresetLibrary: React.FC<PresetLibraryProps> = ({
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedCurrentJson, setCopiedCurrentJson] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Load custom profiles from localStorage
+  // Load custom profiles from localStorage & subscribe to updates
   useEffect(() => {
     setCustomProfiles(getStoredCustomProfiles());
+    const unsub = subscribeToCustomProfiles((profiles) => {
+      setCustomProfiles(profiles);
+    });
+    return unsub;
   }, []);
 
   const allProfiles = [...customProfiles, ...BUILT_IN_PROFILES];
@@ -121,10 +127,9 @@ export const PresetLibrary: React.FC<PresetLibraryProps> = ({
 
   const handleDeleteCustomProfile = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('이 커스텀 프리셋을 삭제하시겠습니까?')) {
-      const updated = deleteCustomProfileFromStorage(id);
-      setCustomProfiles(updated);
-    }
+    const updated = deleteCustomProfileFromStorage(id);
+    setCustomProfiles(updated);
+    setDeleteConfirmId(null);
   };
 
   const handleCopyProfileJson = (profile: AugmentationProfile, e: React.MouseEvent) => {
@@ -297,15 +302,42 @@ export const PresetLibrary: React.FC<PresetLibraryProps> = ({
 
                   <div className="flex items-center gap-1">
                     {!profile.isBuiltIn && (
-                      <button
-                        onClick={(e) => handleDeleteCustomProfile(profile.id, e)}
-                        className="p-1 text-slate-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors"
-                        title="프리셋 삭제"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      deleteConfirmId === profile.id ? (
+                        <div className="flex items-center gap-1 text-[10px]" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteCustomProfile(profile.id, e)}
+                            className="px-1.5 py-0.5 bg-rose-600 text-white font-bold rounded hover:bg-rose-700"
+                          >
+                            삭제
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(null);
+                            }}
+                            className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmId(profile.id);
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors"
+                          title="프리셋 삭제"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )
                     )}
                     <button
+                      type="button"
                       onClick={(e) => handleCopyProfileJson(profile, e)}
                       className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200/60 transition-colors"
                       title="JSON 복사"

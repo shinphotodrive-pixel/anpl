@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>무인교통단속장비 광학·조명 기술분석 대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .tab-active {
+      border-bottom-color: #2563eb;
+      color: #2563eb;
+      font-weight: 700;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 320px;
+      max-height: 400px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 360px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+<!-- Chosen Palette: Warm Slate & Engineering Amber Palette (Background: #f8fafc, Cards: #ffffff, Text: #0f172a, Primary: #2563eb, Accent: #d97706) -->
+
+<!-- Application Structure Plan: 본 단일 페이지 애플리케이션(SPA)은 무인교통단속장비 광학·조명 시스템 보고서의 방대한 기술적 내용과 실무 데이터를 체계적으로 이해할 수 있도록 설계되었습니다. 1) 상단 개요 카드(KPI Dashboard)로 핵심 지표(수명, 전력 절감률, 파장 특성, 인식률)를 즉시 파악합니다. 2) 4개의 탭 테마 구조[탭1: 기술 패러다임 비교, 탭2: KS/경찰청 성능검사 규격, 탭3: 주요 3사(건아/세오/유니시큐) 대표 장비 비교, 탭4: 현장 난제(악천후/반사필름 과노출) & AI 시뮬레이터]를 구축하여 사용자가 목적에 따라 자유롭게 비교 분석할 수 있도록 유기적인 논리 흐름을 구현했습니다. 특히 탭 4에서는 반사필름 번호판의 과노출(Blooming)과 안개/우천 시 빛 산란을 사용자가 직접 매개변수로 제어해보며 Smart IR 및 EXIR 기술의 필요성을 체험할 수 있게 구성했습니다. -->
+
+<!-- Visualization & Content Choices: 1) 제논 vs LED 비교 -> Chart.js Grouped Bar Chart (수명, 전력 절감, 연속 발광, 응답성 직관적 비교). 2) 파장 및 안전 프로토콜 -> HTML/CSS 탭 및 안전 가우시안 인터랙션. 3) KS 규격 매트릭스 -> HTML 검색/필터 가능 구조화 데이터 테이블 + 광속 유지율 선형 차트(Line Chart). 4) 3대 제조사 장비 분석 -> Dynamic Radar Chart (5대 핵심 성능 비교) + 상세 스펙 카드 컴포넌트. 5) 현장 난제 & AI 솔루션 -> HTML Canvas 실시간 렌더링 시뮬레이터 (반사필름/우천 조절 + Smart IR/EXIR 적용 시 픽셀 과노출 억제 효과 시각화). [확인: SVG 그래픽 미사용, Mermaid JS 미사용, 전량 Canvas 및 Pure HTML/CSS/Tailwind 구현] -->
+
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">📡</span>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">무인교통단속장비 광학·조명 기술분석 대시보드</h1>
+          <p class="text-xs text-slate-400">지능형 교통 시스템(ITS) LED 스트로보 & 적외선 광학 아키텍처 보고서</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-slate-300">ITS 광학 규격 v2.4 연동중</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500">광원 수명 비교</span>
+          <span class="text-lg">💡</span>
+        </div>
+        <div class="mt-2">
+          <div class="text-xl font-extrabold text-blue-600">50,000+ 시간</div>
+          <p class="text-xs text-slate-500 mt-1">LED (제논 대비 5~25배 연장)</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500">전력 절감 효과</span>
+          <span class="text-lg">⚡</span>
+        </div>
+        <div class="mt-2">
+          <div class="text-xl font-extrabold text-emerald-600">60% ~ 75%↓</div>
+          <p class="text-xs text-slate-500 mt-1">제논 스트로보 대비 전력 감축</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500">핵심 IR 파장 대역</span>
+          <span class="text-lg">🔬</span>
+        </div>
+        <div class="mt-2">
+          <div class="text-xl font-extrabold text-amber-600">740nm / 850nm</div>
+          <p class="text-xs text-slate-500 mt-1">근적외선(NIR) 고효율 촬상</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500">현장 번호판 인식률</span>
+          <span class="text-lg">🚘</span>
+        </div>
+        <div class="mt-2">
+          <div class="text-xl font-extrabold text-purple-600">99% vs 23%</div>
+          <p class="text-xs text-slate-500 mt-1">정상/AI 제어 vs 야간·악천후</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="border-b border-slate-200 bg-slate-50/50 px-4">
+        <nav class="flex space-x-6 overflow-x-auto text-sm font-medium" id="tabNav">
+          <button onclick="switchTab('tab1')" id="nav-tab1" class="py-3.5 border-b-2 border-transparent hover:text-blue-600 transition whitespace-nowrap tab-active">
+            1. 기술 패러다임 (제논 vs LED)
+          </button>
+          <button onclick="switchTab('tab2')" id="nav-tab2" class="py-3.5 border-b-2 border-transparent hover:text-blue-600 transition whitespace-nowrap">
+            2. KS & 경찰청 성능규격
+          </button>
+          <button onclick="switchTab('tab3')" id="nav-tab3" class="py-3.5 border-b-2 border-transparent hover:text-blue-600 transition whitespace-nowrap">
+            3. 주요 3사 장비 스펙 비교
+          </button>
+          <button onclick="switchTab('tab4')" id="nav-tab4" class="py-3.5 border-b-2 border-transparent hover:text-blue-600 transition whitespace-nowrap">
+            4. 현장 난제 & AI 시뮬레이터
+          </button>
+        </nav>
+      </div>
+
+      <div class="p-5 sm:p-6">
+
+        <div id="tab1" class="tab-pane space-y-6">
+          <div class="bg-blue-50/60 border border-blue-200 rounded-lg p-4 text-xs sm:text-sm text-blue-900 leading-relaxed">
+            <span class="font-bold text-blue-950">개요:</span> 본 섹션은 기존 제논(Xenon) 방전관 조명에서 초고휘도 LED 스트로보 및 적외선(IR) 시스템으로의 물리적·광학적 패러다임 전환 원인을 설명합니다. 재충전 시간(Recovery Time) 소요 및 발열 한계를 극복하고 카메라 글로벌 셔터와 µs 단위로 동기화되는 현대 LED 광학계의 핵심 특성을 비교합니다.
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+            <div class="space-y-4">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span>📊</span> 제논 방전관 vs LED 어레이 핵심 정량 비교
+              </h3>
+              <p class="text-xs text-slate-600">
+                제논 조명은 강력한 순간 발광에도 불구하고 내장 커패시터 재충전 지연과 짧은 수명(2,000~10,000h)이 걸림돌이었습니다. 반면 고출력 LED는 재충전 지연이 없어 다차로 연속 속도 위반 차량을 프레임 누락 없이 수집할 수 있습니다.
+              </p>
+              <div class="chart-container">
+                <canvas id="xenonVsLedChart"></canvas>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span>👁️</span> 파장 대역 선택 및 광과민성 안전 프로토콜
+              </h3>
+              
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-700">광과민성 발작 위험 대역 (Epilepsy Risk Zone)</span>
+                  <span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded">3Hz ~ 30Hz (특히 15~20Hz)</span>
+                </div>
+                <p class="text-xs text-slate-600">
+                  인구 4,000명 중 1명 꼴로 나타나는 광과민성 간질 환자를 보호하기 위해 가시광선 스트로보는 위험 대역을 필히 회피합니다. 현대 교통 단속 조명은 육안 인지도를 차단한 적외선(IR) 대역으로 전면 전환되었습니다.
+                </p>
+                
+                <div class="space-y-2 pt-2">
+                  <div class="text-xs font-semibold text-slate-800">대표 파장 대역별 광학 특성 비교:</div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+                      <div class="font-bold text-amber-700">740nm 근적외선 (NIR)</div>
+                      <div class="text-slate-500 mt-1">CMOS 센서 양자효율(QE) 매우 높음. 희미한 적색 광원으로 운전자 심리적 과속 억제 효과 제공.</div>
+                    </div>
+                    <div class="p-2.5 bg-white border border-slate-200 rounded-lg">
+                      <div class="font-bold text-slate-700">850nm / 940nm 적외선</div>
+                      <div class="text-slate-500 mt-1">육안으로 완전히 불가시 영역. 운전자 눈부심 제로. 번호판 명암비(Contrast) 확보 특화.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                  <span>펄스 제어 폭: <strong class="text-slate-800">1 ~ 5ms</strong></span>
+                  <span>PWM 주파수: <strong class="text-slate-800">&gt; 3,000Hz (플리커 차단)</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab2" class="tab-pane hidden space-y-6">
+          <div class="bg-blue-50/60 border border-blue-200 rounded-lg p-4 text-xs sm:text-sm text-blue-900 leading-relaxed">
+            <span class="font-bold text-blue-950">개요:</span> 대한민국 경찰청, 도로교통공단 및 국가기술표준원(KS)이 적용하는 무인교통단속장비 조명 시스템의 내환경성, 전기적, 광학적 신뢰성 검사 기준입니다. 영하 20℃~영상 50℃의 가혹한 환경 및 상시 진동 속에서도 일관된 광도를 보장하기 위한 상세 규격을 정밀 매트릭스로 제시합니다.
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                  <span>📋</span> KS 및 경찰청 종합 시험 규격 검증 매트릭스
+                </h3>
+                <input type="text" id="ksSearchInput" oninput="filterKsTable()" placeholder="규격 항목 / 내용 검색..." class="text-xs px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+
+              <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                <table class="w-full text-left text-xs text-slate-700 border-collapse" id="ksTable">
+                  <thead class="bg-slate-100 text-slate-800 font-bold border-b border-slate-200">
+                    <tr>
+                      <th class="p-3">평가 항목</th>
+                      <th class="p-3">대한민국 규격 세부 기준 (KS / 경찰청)</th>
+                      <th class="p-3">관련 근거</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-200 bg-white">
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">광속 유지율 및 에이징</td>
+                      <td class="p-3">정격 수명의 25%(최대 6,000시간) 도달 시 초기 광속의 70%(또는 50%) 이상을 반드시 유지</td>
+                      <td class="p-3 text-slate-500">KS 인증 기준</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">열적 안정화 조건</td>
+                      <td class="p-3">전원 인가 후 최소 15분 대기, 시간당 온도 상승폭 5 K 이하 안정화 후 색온도 및 광학 측정</td>
+                      <td class="p-3 text-slate-500">측정 프로토콜 (KS A 0076)</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">조광 제어 (Dimming)</td>
+                      <td class="p-3">200Hz PWM 제어 시 광출력 주파수 60Hz 이상 유지, 정상 광도의 40~70% 안정적 디밍 출동</td>
+                      <td class="p-3 text-slate-500">도로교통공단 규격</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">가속도 진동 시험</td>
+                      <td class="p-3">10~150Hz 범위, 3축, 4.905 m/s² (0.5g) 가속도 진폭, 축당 20 스위프 사이클 후 이상 없을 것</td>
+                      <td class="p-3 text-slate-500">내환경 시험 기준</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">광학적 흔들림 (조사각)</td>
+                      <td class="p-3">진동 및 가혹 시험 전/후 빔 이동 방향 상방향 1.0~1.5 mrad 이내 유지 (조사 편차 극소화)</td>
+                      <td class="p-3 text-slate-500">튜닝 광원 기준</td>
+                    </tr>
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-semibold text-blue-700">이동식 배터리 안전성</td>
+                      <td class="p-3">소비전류 오차 ±20% 이내, 셀 당 전압 1.0V 이하 과방전 시 자동 차단 및 사용자 경고 회로 작동</td>
+                      <td class="p-3 text-slate-500">장비 규격서</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span>📈</span> 광속 유지율 추이 (시간 경과 기준)
+              </h3>
+              <p class="text-xs text-slate-600">
+                KS 규격 기준 6,000시간 가동 시 초기 광속 대비 70% 이상의 광량을 유지해야 최종 적합 판정을 받게 됩니다.
+              </p>
+              <div class="chart-container">
+                <canvas id="lumenMaintenanceChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab3" class="tab-pane hidden space-y-6">
+          <div class="bg-blue-50/60 border border-blue-200 rounded-lg p-4 text-xs sm:text-sm text-blue-900 leading-relaxed">
+            <span class="font-bold text-blue-950">개요:</span> 국내 무인교통단속 시장을 주도하는 대표 3사(건아정보기술, 주식회사 세오, 주식회사 유니시큐)의 특화 광학 시스템 및 기술 아키텍처를 세부 비교합니다. 다차로 분리형, 엣지 컴퓨팅 일체형, 스마트시티 융합형 등 각 사의 독자적인 설계 철학을 정밀 분석합니다.
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="vendorCards">
+            <div onclick="selectVendor('geona')" id="vcard-geona" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-blue-500 shadow-sm transition hover:shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">분리형 다차로 특화</span>
+                <span class="text-xs font-extrabold text-slate-400">01</span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mt-2">건아정보기술</h4>
+              <p class="text-xs text-slate-500">KLED-STD-1000</p>
+              <ul class="mt-3 text-xs text-slate-600 space-y-1">
+                <li>• 8.9MP (4K) 카메라 연동 (최대 3차로)</li>
+                <li>• 72개 High-Power LED 모듈 어레이</li>
+                <li>• 740nm NIR 파장 (심리적 과속 억제)</li>
+                <li>• 듀얼 레이저 비매설 검지 동기화</li>
+              </ul>
+            </div>
+
+            <div onclick="selectVendor('seo')" id="vcard-seo" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-slate-200 shadow-sm transition hover:shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">엣지 AI 일체형</span>
+                <span class="text-xs font-extrabold text-slate-400">02</span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mt-2">주식회사 세오</h4>
+              <p class="text-xs text-slate-500">STVM-SVSD60</p>
+              <ul class="mt-3 text-xs text-slate-600 space-y-1">
+                <li>• All-In-One 단일 함체 (약 3,600만원)</li>
+                <li>• 60GHz 레이더 + AI 매 프레임 광량 동적제어</li>
+                <li>• CUBE-HIDE 통신 구간 암호화 특허</li>
+                <li>• 노이즈 억제로 암호화 오버헤드 최소화</li>
+              </ul>
+            </div>
+
+            <div onclick="selectVendor('unisecu')" id="vcard-unisecu" class="cursor-pointer bg-white p-4 rounded-xl border-2 border-slate-200 shadow-sm transition hover:shadow-md">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">스마트시티 융합</span>
+                <span class="text-xs font-extrabold text-slate-400">03</span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-base mt-2">주식회사 유니시큐</h4>
+              <p class="text-xs text-slate-500">UNI-SRE 시리즈</p>
+              <ul class="mt-3 text-xs text-slate-600 space-y-1">
+                <li>• 자율 환경 반응형 (CdS 포토다이오드)</li>
+                <li>• IP66 밀폐형 뷸렛 폼팩터</li>
+                <li>• LightHunter + Varifocal Smart IR</li>
+                <li>• 보행자/스마트 횡단보도 WDR 발광</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center pt-2">
+            <div class="space-y-4">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span>🎯</span> 3사 광학·시스템 레이더 성능 비교
+              </h3>
+              <p class="text-xs text-slate-600">
+                각 제조사는 커버리지, 센서 융합도, 보안성, 설치 유연성 등에서 서로 다른 특화 강점을 지니고 있습니다.
+              </p>
+              <div class="chart-container">
+                <canvas id="vendorRadarChart"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4" id="vendorDetailPanel">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 text-sm" id="vdetailTitle">건아정보기술 KLED-STD-1000 상세 스펙</h4>
+                <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded" id="vdetailTag">분리형 4K 특화</span>
+              </div>
+              <div class="text-xs text-slate-700 leading-relaxed space-y-2" id="vdetailContent">
+                <p>• <strong>연동 시스템:</strong> KATES-I9BH-INTP1 속도/신호위반 단속장비 연동</p>
+                <p>• <strong>카메라 센서:</strong> 8.9M Pixel (4096x2160, 4K 초고해상도) 센서 탑재</p>
+                <p>• <strong>전원 및 구동:</strong> KMSTCTL2 SMPS (24V/150W), 인텔 i5 엣지 PC 내장</p>
+
+                <p>• <strong>제어 방식:</strong> 최대 35kg 하중 지원 AC220V 팬틸트 보드 내장, 원격 초점 제어</p>
+                <p>• <strong>핵심 매커니즘:</strong> 듀얼 레이저 검지기가 다가오는 차량을 파악하면 이동 벡터를 예측하여 정확한 최적 초점 시점에 72개 LED를 µs 단위 펄스 발광.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab4" class="tab-pane hidden space-y-6">
+          <div class="bg-blue-50/60 border border-blue-200 rounded-lg p-4 text-xs sm:text-sm text-blue-900 leading-relaxed">
+            <span class="font-bold text-blue-950">개요:</span> 실제 아스팔트 도로 위에서 발생하는 야간/악천후 시 인식률 저하(23%까지 급락) 문제 및 신형 반사필름 번호판 도입에 따른 적외선 과노출(IR Blooming) 딜레마를 분석합니다. 하단의 실시간 시뮬레이터를 조작하여 Smart IR 및 EXIR 기술의 반사광 억제 메커니즘을 가상으로 실험할 수 있습니다.
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 space-y-4">
+              <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                <h4 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <span>⚙️</span> 현장 환경 및 카메라 설정 조절
+                </h4>
+
+                <div class="space-y-1.5">
+                  <label class="text-xs font-semibold text-slate-700">기상 조건 (Weather)</label>
+                  <select id="simWeather" onchange="updateSimulator()" class="w-full text-xs p-2 border border-slate-300 rounded-lg">
+                    <option value="clear">맑음 (Clear Night) - 유효 광량 99%</option>
+                    <option value="fog">짙은 안개/우천 (Fog/Rain) - 빛 산란 백스캐터 발생</option>
+                  </select>
+                </div>
+
+                <div class="space-y-1.5">
+                  <label class="text-xs font-semibold text-slate-700">번호판 재질 (Plate Type)</label>
+                  <select id="simPlate" onchange="updateSimulator()" class="w-full text-xs p-2 border border-slate-300 rounded-lg">
+                    <option value="paint">구형 페인트 도장 (3~12 cd/lx·m²)</option>
+                    <option value="film" selected>신형 반사필름 (20~30 cd/lx·m² 초고반사)</option>
+                  </select>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200 space-y-2">
+                  <div class="text-xs font-semibold text-slate-800">광학 기술 억제 솔루션:</div>
+                  <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                    <input type="checkbox" id="simSmartIr" onchange="updateSimulator()" checked class="rounded text-blue-600 focus:ring-blue-500">
+                    <span class="text-slate-700 font-medium">Smart IR (Auto-Dimming µs 펄스 제어)</span>
+                  </label>
+                  <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                    <input type="checkbox" id="simExir" onchange="updateSimulator()" checked class="rounded text-blue-600 focus:ring-blue-500">
+                    <span class="text-slate-700 font-medium">EXIR 구조 (발광부/수광부 분리 격벽)</span>
+                  </label>
+                </div>
+
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900">
+                  <strong>과노출 원인:</strong> 신형 반사필름은 반사 성능이 6배 높아 고출력 IR을 전반사시켜 이미지 센서 픽셀이 하얗게 번지는 Blooming 현상을 유발합니다.
+                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-4">
+              <div class="bg-slate-900 rounded-xl p-4 text-white space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <span class="text-xs font-bold text-slate-300 flex items-center gap-1">
+                    <span>📹</span> 가상 IR 카메라 센서 프레임 버퍼 (Frame Simulation)
+                  </span>
+                  <span id="simStatusBadge" class="text-xs px-2.5 py-0.5 rounded font-bold bg-emerald-500 text-slate-950">
+                    인식 성공 (99.2%)
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-center py-6 bg-slate-950 rounded-lg border border-slate-800 relative overflow-hidden">
+                  <canvas id="simCanvas" width="480" height="180" class="max-w-full h-auto border border-slate-700 rounded shadow-inner"></canvas>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-300 pt-1 font-mono">
+                  <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                    <span class="text-slate-400 block text-[10px]">IR LED Output</span>
+                    <strong id="simPowerReadout" class="text-emerald-400">35% Power</strong>
+                  </div>
+                  <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                    <span class="text-slate-400 block text-[10px]">Pulse Width</span>
+                    <strong id="simPulseReadout" class="text-emerald-400">1.2 ms</strong>
+                  </div>
+                  <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                    <span class="text-slate-400 block text-[10px]">Plate Reflectance</span>
+                    <strong id="simReflectReadout" class="text-amber-400">High (28 cd)</strong>
+                  </div>
+                  <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                    <span class="text-slate-400 block text-[10px]">Backscatter Level</span>
+                    <strong id="simScatterReadout" class="text-blue-400">Low (1%)</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="bg-slate-900 text-slate-300 rounded-xl p-5 sm:p-6 border border-slate-800 space-y-3">
+      <h3 class="text-base font-bold text-white flex items-center gap-2">
+        <span>🚀</span> 결론 및 차세대 지능형 적응 광학(Adaptive Optics) 진화 방향
+      </h3>
+      <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        무인교통단속장비용 LED 조명은 단순한 보조 전등을 넘어 엣지 AI, 레이더, 암호화 칩셋과 유기적으로 연동되는 ITS 지능형 광학 인프라로 발전했습니다. 향후 C-ITS 및 자율주행 시대를 맞아, 광학 시스템은 LiDAR 및 기상 센서와 실시간 연동되어 1프레임 앞의 안개·우천·반사율 변화를 예측하고 PWM 발광 펄스를 미세 조율하는 <strong>지능형 적응 광학(Adaptive Optics)</strong>으로 진화할 것입니다. 또한 국가 인증 규격 역시 정적인 실험실 테스트에서 실도로 기반의 동적 인증 프로토콜로 혁신되어야 할 것입니다.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 text-slate-500 py-4 text-center text-xs mt-auto">
+    무인교통단속장비용 LED 조명 및 적외선 광학 시스템 기술 분석 보고서 기반 Interactive SPA | Powered by Chart.js & Tailwind CSS
+  </footer>
+
+  <script>
+    let xenonVsLedChartInstance = null;
+    let lumenChartInstance = null;
+    let radarChartInstance = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+      initXenonVsLedChart();
+      initLumenChart();
+      initRadarChart();
+      updateSimulator();
+    });
+
+    function switchTab(tabId) {
+      const tabs = ['tab1', 'tab2', 'tab3', 'tab4'];
+      tabs.forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById('nav-' + id).classList.remove('tab-active');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      document.getElementById('nav-' + tabId).classList.add('tab-active');
+
+      if (tabId === 'tab1' && xenonVsLedChartInstance) xenonVsLedChartInstance.resize();
+      if (tabId === 'tab2' && lumenChartInstance) lumenChartInstance.resize();
+      if (tabId === 'tab3' && radarChartInstance) radarChartInstance.resize();
+      if (tabId === 'tab4') updateSimulator();
+    }
+
+    function initXenonVsLedChart() {
+      const ctx = document.getElementById('xenonVsLedChart').getContext('2d');
+      xenonVsLedChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['기본 수명 (x1000 시간)', '전력 효율성 (지수)', '연속발광 지연시간 (상대값)', '펄스 제어 정밀도 (지수)'],
+          datasets: [
+            {
+              label: '구형 제논 (Xenon)',
+              data: [5, 30, 95, 40],
+              backgroundColor: 'rgba(239, 68, 68, 0.7)',
+              borderColor: 'rgb(239, 68, 68)',
+              borderWidth: 1
+            },
+            {
+              label: '최신 고출력 LED 스트로보',
+              data: [50, 90, 5, 98],
+              backgroundColor: 'rgba(37, 99, 235, 0.7)',
+              borderColor: 'rgb(37, 99, 235)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.raw;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function initLumenChart() {
+      const ctx = document.getElementById('lumenMaintenanceChart').getContext('2d');
+      lumenChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['0시간 (초기)', '1,000시간', '2,500시간', '4,000시간', '6,000시간 (KS인증점)', '10,000시간'],
+          datasets: [
+            {
+              label: 'LED 광속 유지율 (%)',
+              data: [100, 96, 91, 86, 81, 74],
+              borderColor: 'rgb(16, 185, 129)',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'KS 최소 적합 기준선 (70%)',
+              data: [70, 70, 70, 70, 70, 70],
+              borderColor: 'rgb(239, 68, 68)',
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { size: 11 } } }
+          },
+          scales: {
+            y: { min: 50, max: 105, ticks: { font: { size: 10 } } },
+            x: { ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function initRadarChart() {
+      const ctx = document.getElementById('vendorRadarChart').getContext('2d');
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['다차로 커버리지', 'AI 센서 융합도', '파장/광량 제어', '설치/단일 함체성', '보안/암호화'],
+          datasets: [
+            {
+              label: '건아정보기술 KLED-STD-1000',
+              data: [98, 82, 90, 75, 80],
+              borderColor: 'rgb(37, 99, 235)',
+              backgroundColor: 'rgba(37, 99, 235, 0.2)'
+            },
+            {
+              label: '주식회사 세오 STVM-SVSD60',
+              data: [88, 98, 95, 95, 99],
+              borderColor: 'rgb(147, 51, 234)',
+              backgroundColor: 'rgba(147, 51, 234, 0.2)'
+            },
+            {
+              label: '유니시큐 UNI-SRE 시리즈',
+              data: [80, 88, 88, 90, 82],
+              borderColor: 'rgb(16, 185, 129)',
+              backgroundColor: 'rgba(16, 185, 129, 0.2)'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { font: { size: 10 } } }
+          },
+          scales: {
+            r: {
+              angleLines: { color: '#e2e8f0' },
+              suggestedMin: 50,
+              suggestedMax: 100,
+              ticks: { font: { size: 9 }, stepSize: 10 }
+            }
+          }
+        }
+      });
+    }
+
+    function filterKsTable() {
+      const input = document.getElementById('ksSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#ksTable tbody tr');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? '' : 'none';
+      });
+    }
+
+    const vendorDetails = {
+      geona: {
+        title: '건아정보기술 KLED-STD-1000 상세 스펙',
+        tag: '분리형 4K 특화',
+        tagClass: 'bg-blue-100 text-blue-800',
+        content: `<p>• <strong>연동 시스템:</strong> KATES-I9BH-INTP1 속도/신호위반 단속장비 연동</p>
+                  <p>• <strong>카메라 센서:</strong> 8.9M Pixel (4096x2160, 4K 초고해상도) 센서 탑재</p>
+                  <p>• <strong>광원 구조:</strong> 72개 High-Power LED 모듈 직접 집적 어레이</p>
+                  <p>• <strong>조명 파장:</strong> 740nm 근적외선 (NIR) - CMOS 높은 QE 및 예방적 경고 적색광</p>
+                  <p>• <strong>전원 및 구동:</strong> KMSTCTL2 SMPS (24V/150W), 인텔 i5 엣지 PC 내장, AC220V 팬틸트 구동</p>
+                  <p>• <strong>핵심 매커니즘:</strong> 듀얼 레이저 검지기가 다가오는 차량을 파악하면 이동 공간 데이터로 예측하여 최적 초점 위치에서 72개 LED를 마이크로초 펄스 발광.</p>`
+      },
+      seo: {
+        title: '주식회사 세오 STVM-SVSD60 상세 스펙',
+        tag: '엣지 AI 일체형',
+        tagClass: 'bg-purple-100 text-purple-800',
+        content: `<p>• <strong>장비 유형:</strong> 검지기, AI 카메라, 제어기, 광학 조명 일체형 (All-In-One, 약 3,600만원)</p>
+                  <p>• <strong>레이더 제원:</strong> 60GHz 고해상도 레이더 센서 (다차선 객체 3D 속도/위치 추적)</p>
+                  <p>• <strong>동적 조명 제어:</strong> AI 유닛이 실시간 배경 조도 및 차량 반사율을 매 프레임 분석하여 광량 동적 조절</p>
+                  <p>• <strong>보안 암호화:</strong> CUBE-HIDE 특허 암호화 칩셋 탑재 (통신 구간 원천 암호화)</p>
+                  <p>• <strong>시너지 효과:</strong> 고품질 조명으로 노이즈를 억제한 '클린 영상'을 확보하여 암호화 연산 병목(Overhead) 극적 예방 및 99% 인식률 달성.</p>`
+      },
+      unisecu: {
+        title: '주식회사 유니시큐 UNI-SRE 시리즈 상세 스펙',
+        tag: '스마트시티 융합',
+        tagClass: 'bg-emerald-100 text-emerald-800',
+        content: `<p>• <strong>장비 유형:</strong> IP66 방수 뷸렛형 일체형 적외선 카메라 (UNI-SRE-89A / UNI-SRE-32A)</p>
+                  <p>• <strong>자율 환경 반응:</strong> 조도 센서(CdS 포토다이오드) 내장으로 수동 조작 없는 Auto ON/OFF</p>
+                  <p>• <strong>광학 기술:</strong> LightHunter 저조도 기술 + 2.7~13.5mm 전동 가변 초점 렌즈</p>
+                  <p>• <strong>Smart IR:</strong> 화각 줌 인/아웃에 연동되어 빔 방사각 자동 수축/확장 (근거리 타들어감 예방)</p>
+                  <p>• <strong>시나리오:</strong> 보행자 자동 인식, 스마트 횡단보도, WDR 조도 균형을 통한 차량/사람 동시 정밀 분석.</p>`
+      }
+    };
+
+    function selectVendor(key) {
+      ['geona', 'seo', 'unisecu'].forEach(v => {
+        const card = document.getElementById('vcard-' + v);
+        if (v === key) {
+          card.classList.add('border-blue-500');
+          card.classList.remove('border-slate-200');
+        } else {
+          card.classList.remove('border-blue-500');
+          card.classList.add('border-slate-200');
+        }
+      });
+
+      const detail = vendorDetails[key];
+      document.getElementById('vdetailTitle').innerText = detail.title;
+      const tagEl = document.getElementById('vdetailTag');
+      tagEl.innerText = detail.tag;
+      tagEl.className = 'text-xs font-bold px-2 py-0.5 rounded ' + detail.tagClass;
+      document.getElementById('vdetailContent').innerHTML = detail.content;
+    }
+
+    function updateSimulator() {
+      const weather = document.getElementById('simWeather').value;
+      const plate = document.getElementById('simPlate').value;
+      const smartIr = document.getElementById('simSmartIr').checked;
+      const exir = document.getElementById('simExir').checked;
+
+      let power = 100;
+      let pulseMs = 4.5;
+      let isBlooming = false;
+      let isBackscatter = (weather === 'fog');
+      let recSuccess = true;
+
+      if (plate === 'film') {
+        if (!smartIr && !exir) {
+          isBlooming = true;
+          recSuccess = false;
+        } else if (smartIr && !exir) {
+          power = 40;
+          pulseMs = 1.2;
+          isBlooming = false;
+          recSuccess = true;
+        } else if (!smartIr && exir) {
+          power = 60;
+          pulseMs = 2.0;
+          isBlooming = false;
+          recSuccess = true;
+        } else {
+          power = 35;
+          pulseMs = 1.0;
+          isBlooming = false;
+          recSuccess = true;
+        }
+      } else {
+        power = 75;
+        pulseMs = 3.0;
+        isBlooming = false;
+        recSuccess = true;
+      }
+
+      if (isBackscatter && !smartIr) {
+        recSuccess = false;
+      }
+
+      document.getElementById('simPowerReadout').innerText = power + '% Power';
+      document.getElementById('simPulseReadout').innerText = pulseMs + ' ms';
+      document.getElementById('simReflectReadout').innerText = (plate === 'film') ? 'High (28 cd)' : 'Normal (8 cd)';
+      document.getElementById('simScatterReadout').innerText = isBackscatter ? 'High (Rain/Fog)' : 'Low (1%)';
+
+      const badge = document.getElementById('simStatusBadge');
+      if (isBlooming) {
+        badge.innerText = '과노출 판독 불가 (Blooming Fail)';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded font-bold bg-red-500 text-white';
+      } else if (isBackscatter && !smartIr) {
+        badge.innerText = '안개 빛 산란 판독 실패 (23% Baseline)';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded font-bold bg-amber-500 text-slate-950';
+      } else {
+        badge.innerText = '정상 픽셀 수집 (인식률 99.2%)';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded font-bold bg-emerald-500 text-slate-950';
+      }
+
+      renderSimCanvas(isBlooming, isBackscatter, smartIr, exir, plate);
+    }
+
+    function renderSimCanvas(isBlooming, isBackscatter, smartIr, exir, plate) {
+      const canvas = document.getElementById('simCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(80, 20, 320, 140);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(100, 30, 280, 100);
+
+      ctx.fillStyle = (plate === 'film') ? '#f1f5f9' : '#cbd5e1';
+      ctx.fillRect(160, 90, 160, 35);
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(160, 90, 160, 35);
+
+      if (isBlooming) {
+        const grad = ctx.createRadialGradient(240, 107, 5, 240, 107, 70);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(240, 107, 75, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('[IR BLOOMING WARNING]', 165, 60);
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('123가 4567', 195, 114);
+      }
+
+      if (isBackscatter) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        for (let i = 0; i < 40; i++) {
+          let rx = (i * 13) % canvas.width;
+          let ry = (i * 29) % canvas.height;
+          ctx.beginPath();
+          ctx.arc(rx, ry, (i % 3) + 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = '10px monospace';
+      ctx.fillText('FPS: 60 | RAW IR BUFFER', 10, 15);
+      if (smartIr) ctx.fillText('SMART-IR: ACTIVE', 360, 15);
+    }
+  </script>
+</body>
+</html>

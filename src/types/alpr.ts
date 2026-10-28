@@ -66,3 +66,13 @@ export interface PlateTemplate {
   textColor: string;
   borderColor: string;
 }
+
+export interface HistoryConfigItem {
+  id: string;
+  timestamp: string;
+  label: string;
+  params: AugmentationParams;
+  source: 'preset' | 'random' | 'profile' | 'manual' | 'initial';
+  summaryTags: string[];
+}
+

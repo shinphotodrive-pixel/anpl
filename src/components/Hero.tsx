@@ -1,7 +1,9 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb } from 'lucide-react';
 
 interface HeroProps {
+  onScrollToDetector?: () => void;
+  onScrollToLighting?: () => void;
   onScrollToSimulator: () => void;
   onScrollToPresets?: () => void;
   onScrollToTestBench: () => void;
@@ -9,6 +11,8 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ 
+  onScrollToDetector,
+  onScrollToLighting,
   onScrollToSimulator, 
   onScrollToPresets,
   onScrollToTestBench, 
@@ -74,7 +78,27 @@ export const Hero: React.FC<HeroProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 flex-wrap">
+          {onScrollToDetector && (
+            <button
+              onClick={onScrollToDetector}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <ScanLine className="w-4 h-4 text-slate-950" />
+              <span>번호판 인식 프로그램 (ALPR)</span>
+            </button>
+          )}
+
+          {onScrollToLighting && (
+            <button
+              onClick={onScrollToLighting}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Lightbulb className="w-4 h-4 text-slate-950" />
+              <span>조명 기술 분석</span>
+            </button>
+          )}
+
           <button
             onClick={onScrollToSimulator}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"

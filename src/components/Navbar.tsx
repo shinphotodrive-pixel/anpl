@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Menu, X, Sliders, Layers, Database, Calculator, GitBranch, Zap, Bookmark } from 'lucide-react';
+import { Car, Menu, X, Sliders, Layers, Database, Calculator, GitBranch, Zap, Bookmark, ScanLine, Lightbulb } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -10,6 +10,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
+    { id: 'detector', label: '번호판 인식 프로그램', icon: ScanLine },
+    { id: 'lighting', label: '조명', icon: Lightbulb },
     { id: 'simulator', label: '증강 시뮬레이터', icon: Sliders },
     { id: 'presets', label: '프리셋 라이브러리', icon: Bookmark },
     { id: 'testbench', label: '인식 테스트 랩', icon: Zap },

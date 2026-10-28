@@ -180,11 +180,64 @@ export const BUILT_IN_PROFILES: AugmentationProfile[] = [
 ];
 
 const STORAGE_KEY = 'alpr_custom_augmentation_profiles';
+export const PROFILES_CHANGED_EVENT = 'alpr_custom_profiles_changed';
 
 export function getStoredCustomProfiles(): AugmentationProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      // Provide an initial starter profile so users immediately see how My Presets works
+      const initialStarters: AugmentationProfile[] = [
+        {
+          id: 'custom_sample_1',
+          name: '야간 빗길 과속 단속 (Night Rain Dash)',
+          category: 'weather',
+          categoryLabel: '악천후 기상',
+          description: '빗줄기와 야간 노이즈, 미세 모션블러가 결합된 실무 엣지케이스',
+          params: {
+            blur: 4,
+            brightness: 55,
+            contrast: 120,
+            noise: 35,
+            rotate: -2,
+            perspectiveX: 6,
+            perspectiveY: 2,
+            rain: 65,
+            fog: 30,
+            dirt: 10,
+            glare: 15,
+          },
+          plateType: 'white_8',
+          isBuiltIn: false,
+          createdAt: '기본 제공',
+        },
+        {
+          id: 'custom_sample_2',
+          name: '지하주차장 광각 사각 (Underground CCTV)',
+          category: 'camera',
+          categoryLabel: '카메라 각도',
+          description: '출차 경사로 천장 CCTV에서 촬영된 상향 3D 원근 왜곡과 플레어',
+          params: {
+            blur: 1,
+            brightness: 85,
+            contrast: 130,
+            noise: 25,
+            rotate: 8,
+            perspectiveX: -18,
+            perspectiveY: 15,
+            rain: 0,
+            fog: 0,
+            dirt: 5,
+            glare: 45,
+          },
+          plateType: 'white_8',
+          isBuiltIn: false,
+          createdAt: '기본 제공',
+        }
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialStarters));
+      return initialStarters;
+    }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return parsed;
@@ -196,11 +249,18 @@ export function getStoredCustomProfiles(): AugmentationProfile[] {
   }
 }
 
+function notifyStorageChanged(profiles: AugmentationProfile[]) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(PROFILES_CHANGED_EVENT, { detail: profiles }));
+  }
+}
+
 export function saveCustomProfileToStorage(profile: AugmentationProfile): AugmentationProfile[] {
   try {
     const current = getStoredCustomProfiles();
     const updated = [profile, ...current.filter(p => p.id !== profile.id)];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    notifyStorageChanged(updated);
     return updated;
   } catch (err) {
     console.error('Failed to save profile to storage', err);
@@ -213,9 +273,67 @@ export function deleteCustomProfileFromStorage(profileId: string): AugmentationP
     const current = getStoredCustomProfiles();
     const updated = current.filter(p => p.id !== profileId);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    notifyStorageChanged(updated);
     return updated;
   } catch (err) {
     console.error('Failed to delete profile from storage', err);
     return getStoredCustomProfiles();
   }
+}
+
+export function subscribeToCustomProfiles(callback: (profiles: AugmentationProfile[]) => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  
+  const handleEvent = (e: Event) => {
+    const customEvent = e as CustomEvent<AugmentationProfile[]>;
+    if (customEvent.detail) {
+      callback(customEvent.detail);
+    } else {
+      callback(getStoredCustomProfiles());
+    }
+  };
+
+  const handleStorageEvent = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) {
+      callback(getStoredCustomProfiles());
+    }
+  };
+
+  window.addEventListener(PROFILES_CHANGED_EVENT, handleEvent);
+  window.addEventListener('storage', handleStorageEvent);
+
+  return () => {
+    window.removeEventListener(PROFILES_CHANGED_EVENT, handleEvent);
+    window.removeEventListener('storage', handleStorageEvent);
+  };
+}
+
+export function suggestProfileName(params: AugmentationParams): string {
+  const parts: string[] = [];
+  if (params.rain > 40) parts.push('폭우');
+  else if (params.rain > 0) parts.push('우천');
+
+  if (params.fog > 40) parts.push('짙은안개');
+
+  if (params.blur >= 7) parts.push('고속블러');
+  else if (params.blur > 0) parts.push('초점흐림');
+
+  if (params.brightness < 50) parts.push('심야저조도');
+  else if (params.brightness > 120) parts.push('고노출');
+
+  if (params.glare >= 40) parts.push('헤드라이트역광');
+  if (params.dirt >= 35) parts.push('흙먼지오염');
+
+  if (Math.abs(params.perspectiveX) > 15 || Math.abs(params.perspectiveY) > 15) {
+    parts.push('CCTV사각');
+  } else if (Math.abs(params.rotate) >= 10) {
+    parts.push('기울임각도');
+  }
+
+  if (params.noise >= 50) parts.push('센서노이즈');
+
+  if (parts.length === 0) {
+    return '표준 커스텀 파라미터';
+  }
+  return parts.slice(0, 3).join(' ') + ' 프로필';
 }

@@ -189,7 +189,7 @@ export const TestBenchSection: React.FC<TestBenchSectionProps> = ({ currentParam
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>배치 일괄 증강 처리 (Batch Processing)</span>
+            <span>배치 프로세서 (Batch Processor)</span>
           </button>
 
           <button

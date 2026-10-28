@@ -6,6 +6,8 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { LicensePlateDetectorSection } from './components/LicensePlateDetector/LicensePlateDetectorSection';
+import { LightingDashboardSection } from './components/Lighting/LightingDashboardSection';
 import { SimulatorView } from './components/Simulator/SimulatorView';
 import { PresetLibrarySection } from './components/PresetLibrary/PresetLibrarySection';
 import { TestBenchSection } from './components/TestBench/TestBenchSection';
@@ -17,7 +19,7 @@ import { AugmentationParams, PlateType } from './types/alpr';
 import { Footer } from './components/Footer';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('simulator');
+  const [activeTab, setActiveTab] = useState<string>('detector');
 
   const defaultParams: AugmentationParams = {
     blur: 0,
@@ -56,11 +58,19 @@ export default function App() {
       <main className="flex-grow">
         {/* Hero Section */}
         <Hero
+          onScrollToDetector={() => scrollToSection('detector')}
+          onScrollToLighting={() => scrollToSection('lighting')}
           onScrollToSimulator={() => scrollToSection('simulator')}
           onScrollToPresets={() => scrollToSection('presets')}
           onScrollToTestBench={() => scrollToSection('testbench')}
           onScrollToSolutions={() => scrollToSection('solutions')}
         />
+
+        {/* 0. Dedicated License Plate Recognition Program (dataslayermedia/License-Plate-Detection) */}
+        <LicensePlateDetectorSection />
+
+        {/* 0.1 Dedicated Lighting & Optics Technical Analysis Dashboard ("조명") */}
+        <LightingDashboardSection />
 
         {/* 1. Interactive Augmentation Simulator */}
         <SimulatorView sharedParams={params} setSharedParams={setParams} />

@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { AugmentationParams } from '../../types/alpr';
-import { Copy, Check, Terminal, Code2 } from 'lucide-react';
+import { Copy, Check, Terminal, Code2, FileJson, Download, ExternalLink } from 'lucide-react';
+import { generatePipelineJson, downloadAugmentationJson } from '../../utils/exportConfig';
 
 interface CodeViewerProps {
   albumentationsCode: string;
   params: AugmentationParams;
+  onOpenExportModal?: () => void;
 }
 
-export const CodeViewer: React.FC<CodeViewerProps> = ({ albumentationsCode, params }) => {
+export const CodeViewer: React.FC<CodeViewerProps> = ({ 
+  albumentationsCode, 
+  params,
+  onOpenExportModal 
+}) => {
   const [copied, setCopied] = useState(false);
-  const [frameworkTab, setFrameworkTab] = useState<'albumentations' | 'pytorch' | 'opencv'>('albumentations');
+  const [downloaded, setDownloaded] = useState(false);
+  const [frameworkTab, setFrameworkTab] = useState<'albumentations' | 'pytorch' | 'opencv' | 'json'>('albumentations');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(getCodeContent());
@@ -57,16 +64,33 @@ def apply_alpr_transforms(image):
     return adjusted`;
   };
 
+  const getJsonCode = () => {
+    return generatePipelineJson(params, {
+      format: 'full_pipeline',
+      indent: 2,
+    });
+  };
+
   const getCodeContent = () => {
     switch (frameworkTab) {
       case 'pytorch':
         return getPytorchCode();
       case 'opencv':
         return getOpencvCode();
+      case 'json':
+        return getJsonCode();
       case 'albumentations':
       default:
         return albumentationsCode;
     }
+  };
+
+  const handleDownloadDirectJson = () => {
+    downloadAugmentationJson(params, {
+      profileName: 'alpr_augmentation_pipeline',
+    });
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 2000);
   };
 
   return (
@@ -112,25 +136,70 @@ def apply_alpr_transforms(image):
           >
             OpenCV
           </button>
+          <button
+            onClick={() => setFrameworkTab('json')}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+              frameworkTab === 'json'
+                ? 'bg-emerald-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileJson className="w-3 h-3" />
+            <span>파이프라인 JSON</span>
+          </button>
         </div>
 
-        {/* Copy Button */}
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all border border-slate-700"
-        >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-400">복사 완료!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-3.5 h-3.5 text-slate-400" />
-              <span>코드 복사</span>
-            </>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1.5">
+          {frameworkTab === 'json' && (
+            <button
+              onClick={handleDownloadDirectJson}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-2xs"
+              title="JSON 파일 즉시 다운로드"
+            >
+              {downloaded ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-white" />
+                  <span>다운로드됨!</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5 text-white" />
+                  <span>JSON 다운로드</span>
+                </>
+              )}
+            </button>
           )}
-        </button>
+
+          {onOpenExportModal && (
+            <button
+              onClick={onOpenExportModal}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 transition-colors"
+              title="포맷 선택 및 세부 설정 내보내기 모달 열기"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>포맷 옵션</span>
+            </button>
+          )}
+
+          {/* Copy Button */}
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all border border-slate-700"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">복사 완료!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                <span>코드 복사</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Code Text Body */}

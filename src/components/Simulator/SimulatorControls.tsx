@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AugmentationParams, 
   PlateType, 
-  PresetType 
+  PresetType,
+  AugmentationProfile,
+  HistoryConfigItem 
 } from '../../types/alpr';
 import { 
   Sparkles, 
@@ -17,9 +19,26 @@ import {
   Shuffle,
   Power,
   Download,
-  Check
+  Check,
+  Dices,
+  History,
+  FileJson,
+  Bookmark,
+  BookmarkPlus,
+  Trash2,
+  Copy,
+  Plus,
+  FolderHeart,
+  FolderArchive
 } from 'lucide-react';
 import { downloadAugmentationJson } from '../../utils/exportConfig';
+import { 
+  getStoredCustomProfiles, 
+  deleteCustomProfileFromStorage, 
+  subscribeToCustomProfiles 
+} from '../../data/presetProfiles';
+import { RecentHistoryPanel } from './RecentHistoryPanel';
+import { SavePresetModal } from './SavePresetModal';
 
 interface SimulatorControlsProps {
   plateText: string;
@@ -33,6 +52,15 @@ interface SimulatorControlsProps {
   activePreset: PresetType | 'custom';
   applyPreset: (preset: PresetType) => void;
   onRandomizePlate: () => void;
+  onRandomizeParams: () => void;
+  history: HistoryConfigItem[];
+  onRestoreHistory: (item: HistoryConfigItem) => void;
+  onClearHistory: () => void;
+  onToggleHistoryDrawer?: () => void;
+  onOpenExportModal?: () => void;
+  onApplyCustomProfile?: (profile: AugmentationProfile) => void;
+  activeProfileId?: string | null;
+  onOpenBulkProcessor?: () => void;
 }
 
 export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
@@ -47,6 +75,15 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   activePreset,
   applyPreset,
   onRandomizePlate,
+  onRandomizeParams,
+  history,
+  onRestoreHistory,
+  onClearHistory,
+  onToggleHistoryDrawer,
+  onOpenExportModal,
+  onApplyCustomProfile,
+  activeProfileId,
+  onOpenBulkProcessor,
 }) => {
   const presets = [
     { id: 'original' as PresetType, label: '원본 (Clean)', icon: Sparkles, color: 'text-sky-500' },
@@ -68,6 +105,49 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
   ];
 
   const [downloaded, setDownloaded] = useState(false);
+  const [presetViewTab, setPresetViewTab] = useState<'builtin' | 'my_presets'>('builtin');
+  const [customProfiles, setCustomProfiles] = useState<AugmentationProfile[]>(() => getStoredCustomProfiles());
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [copiedProfileId, setCopiedProfileId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Subscribe to storage updates across components
+  useEffect(() => {
+    const unsubscribe = subscribeToCustomProfiles((profiles) => {
+      setCustomProfiles(profiles);
+    });
+    return unsubscribe;
+  }, []);
+
+  const handleApplyProfile = (profile: AugmentationProfile) => {
+    if (onApplyCustomProfile) {
+      onApplyCustomProfile(profile);
+    } else {
+      setParams(profile.params);
+      if (profile.plateType) {
+        setPlateType(profile.plateType);
+      }
+    }
+  };
+
+  const handleDeleteProfile = (profileId: string) => {
+    deleteCustomProfileFromStorage(profileId);
+    setDeleteConfirmId(null);
+  };
+
+  const handleCopyProfile = (profile: AugmentationProfile, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const configData = {
+      name: profile.name,
+      category: profile.category,
+      description: profile.description,
+      params: profile.params,
+      exportedAt: new Date().toISOString(),
+    };
+    navigator.clipboard.writeText(JSON.stringify(configData, null, 2));
+    setCopiedProfileId(profile.id);
+    setTimeout(() => setCopiedProfileId(null), 2000);
+  };
 
   const handleDownloadJson = () => {
     downloadAugmentationJson(params, {
@@ -157,69 +237,383 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
         </div>
       </div>
 
-      {/* 2. Quick Preset Buttons */}
+      {/* 2. Quick Preset Buttons & My Presets */}
       <div className="border-t border-slate-100 pt-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              2. 원클릭 환경 프리셋 (Presets)
+              2. 환경 프리셋 (Presets)
             </span>
             <span className="text-[11px] font-mono font-medium text-slate-500">
               · 활성 효과: <strong className="text-sky-600">{activeCount}개</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             <button
-              onClick={handleDownloadJson}
-              className="flex items-center gap-1 text-xs text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/90 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-2xs"
-              title="현재 증강 파라미터를 JSON 파일로 다운로드"
+              type="button"
+              onClick={() => setIsSaveModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-sky-900 bg-sky-50 hover:bg-sky-100 border border-sky-300 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-2xs group"
+              title="현재 파라미터 설정을 '내 프리셋' 로컬 저장소에 저장"
             >
-              {downloaded ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700">다운로드됨!</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5 text-sky-600" />
-                  <span>JSON 파일 다운로드</span>
-                </>
-              )}
+              <BookmarkPlus className="w-3.5 h-3.5 text-sky-600 group-hover:scale-110 transition-transform" />
+              <span>내 프리셋 저장</span>
             </button>
 
             <button
+              type="button"
+              onClick={onRandomizeParams}
+              className="flex items-center gap-1 text-xs text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-2xs group"
+              title="다양한 악조건 엣지케이스(폭우, 야간 모션블러, CCTV 각도, 오염 등) 무작위 파라미터 생성"
+            >
+              <Dices className="w-3.5 h-3.5 text-amber-600 group-hover:rotate-45 transition-transform" />
+              <span>랜덤 증강</span>
+            </button>
+
+            {onOpenBulkProcessor && (
+              <button
+                type="button"
+                onClick={onOpenBulkProcessor}
+                className="flex items-center gap-1.5 text-xs text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-2xs group"
+                title="이미지 폴더를 업로드하여 현재 파라미터로 일괄 증강 및 새 데이터셋 생성"
+              >
+                <FolderArchive className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span>폴더 일괄 증강</span>
+              </button>
+            )}
+
+            {onOpenExportModal ? (
+              <div className="flex items-center rounded-lg border border-sky-200/90 overflow-hidden shadow-2xs bg-sky-50">
+                <button
+                  type="button"
+                  onClick={onOpenExportModal}
+                  className="flex items-center gap-1.5 text-xs text-sky-800 hover:text-sky-950 font-bold px-2.5 py-1 transition-all active:scale-95 hover:bg-sky-100"
+                  title="외부 데이터 파이프라인 연동용 JSON 내보내기 및 포맷 설정 모달 열기"
+                >
+                  <FileJson className="w-3.5 h-3.5 text-sky-600" />
+                  <span>JSON 내보내기</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadJson}
+                  className="px-1.5 py-1 text-sky-700 hover:text-sky-900 border-l border-sky-200 hover:bg-sky-100 transition-colors"
+                  title="기본 설정으로 즉시 파일 다운로드"
+                >
+                  {downloaded ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5 text-sky-600" />
+                  )}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDownloadJson}
+                className="flex items-center gap-1 text-xs text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/90 font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 shadow-2xs"
+                title="현재 증강 파라미터를 JSON 파일로 다운로드"
+              >
+                {downloaded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-700">다운로드됨!</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5 text-sky-600" />
+                    <span>JSON 다운로드</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            <button
+              type="button"
               onClick={handleResetAll}
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>모두 초기화</span>
+              <span>초기화</span>
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {presets.map((preset) => {
-            const Icon = preset.icon;
-            const isActive = activePreset === preset.id;
-            return (
-              <button
-                key={preset.id}
-                onClick={() => applyPreset(preset.id)}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-slate-900 border-slate-900 text-white shadow-md'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                }`}
-              >
-                <div className={`p-1.5 rounded-lg ${isActive ? 'bg-slate-800 text-sky-400' : 'bg-slate-100 ' + preset.color}`}>
-                  <Icon className="w-3.5 h-3.5" />
-                </div>
-                <span className="truncate">{preset.label}</span>
-              </button>
-            );
-          })}
+        {/* Tab switch between Built-in Presets vs My Presets */}
+        <div className="flex items-center gap-1.5 mb-3 bg-slate-100/90 p-1 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setPresetViewTab('builtin')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+              presetViewTab === 'builtin'
+                ? 'bg-white text-slate-900 shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+            <span>기본 환경 프리셋 ({presets.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPresetViewTab('my_presets')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+              presetViewTab === 'my_presets'
+                ? 'bg-white text-slate-900 shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Bookmark className="w-3.5 h-3.5 text-purple-600" />
+            <span>내 프리셋 (My Presets)</span>
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+              presetViewTab === 'my_presets' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {customProfiles.length}
+            </span>
+          </button>
         </div>
+
+        {/* Built-in Presets Grid */}
+        {presetViewTab === 'builtin' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {presets.map((preset) => {
+              const Icon = preset.icon;
+              const isActive = activePreset === preset.id && !activeProfileId;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => applyPreset(preset.id)}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs font-semibold transition-all ${
+                    isActive
+                      ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                  }`}
+                >
+                  <div className={`p-1.5 rounded-lg ${isActive ? 'bg-slate-800 text-sky-400' : 'bg-slate-100 ' + preset.color}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="truncate">{preset.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          /* My Presets (Local Storage) Grid */
+          <div className="space-y-2.5">
+            {customProfiles.length === 0 ? (
+              <div className="p-6 text-center bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mx-auto mb-2">
+                  <Bookmark className="w-5 h-5" />
+                </div>
+                <h5 className="text-xs font-bold text-slate-800">
+                  저장된 내 프리셋이 없습니다
+                </h5>
+                <p className="text-[11px] text-slate-500 max-w-sm mx-auto mt-1 mb-3">
+                  자주 사용하는 증강 파라미터 조합을 로컬 저장소에 저장하여 언제든 1초 만에 불러오세요.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSaveModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg shadow-2xs transition-all active:scale-95"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  <span>현재 파라미터를 내 프리셋으로 저장</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {customProfiles.map((profile) => {
+                  const isActive = activeProfileId === profile.id;
+                  const isConfirmingDelete = deleteConfirmId === profile.id;
+
+                  return (
+                    <div
+                      key={profile.id}
+                      onClick={() => handleApplyProfile(profile)}
+                      className={`group p-3 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between relative ${
+                        isActive
+                          ? 'bg-sky-50/80 border-sky-500 shadow-sm ring-1 ring-sky-500'
+                          : 'bg-white hover:bg-slate-50/80 border-slate-200 hover:border-slate-300 shadow-2xs'
+                      }`}
+                    >
+                      <div>
+                        {/* Top info and actions */}
+                        <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 mb-2">
+                          <span className="text-[10px] font-mono font-bold text-slate-500 px-1.5 py-0.5 bg-slate-100 rounded">
+                            {profile.categoryLabel || profile.category || '사용자 정의'}
+                          </span>
+
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopyProfile(profile, e)}
+                              className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition-colors"
+                              title="JSON 설정 복사"
+                            >
+                              {copiedProfileId === profile.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+
+                            {isConfirmingDelete ? (
+                              <div className="flex items-center gap-1 text-[10px]">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProfile(profile.id)}
+                                  className="px-1.5 py-0.5 bg-rose-600 text-white font-bold rounded hover:bg-rose-700"
+                                >
+                                  삭제
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded hover:bg-slate-300"
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setDeleteConfirmId(profile.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors"
+                                title="프리셋 삭제"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Profile Name & Date */}
+                        <div className="flex items-start justify-between gap-1 mb-1">
+                          <h5 className="text-xs font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-1">
+                            {profile.name}
+                          </h5>
+                          {profile.createdAt && (
+                            <span className="text-[9px] font-mono text-slate-500 shrink-0">
+                              {profile.createdAt}
+                            </span>
+                          )}
+                        </div>
+
+                        {profile.description && (
+                          <p className="text-[11px] text-slate-500 line-clamp-1 mb-2">
+                            {profile.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Parameter summary pills */}
+                      <div className="pt-2 border-t border-slate-100/80">
+                        <div className="flex flex-wrap gap-1 text-[9.5px] font-mono mb-2">
+                          {profile.params.blur > 0 && (
+                            <span className="px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                              블러 {profile.params.blur}px
+                            </span>
+                          )}
+                          {profile.params.rain > 0 && (
+                            <span className="px-1.5 py-0.2 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded">
+                              강우 {profile.params.rain}%
+                            </span>
+                          )}
+                          {profile.params.noise > 0 && (
+                            <span className="px-1.5 py-0.2 bg-amber-50 text-amber-700 border border-amber-200 rounded">
+                              노이즈 {profile.params.noise}%
+                            </span>
+                          )}
+                          {profile.params.brightness !== 100 && (
+                            <span className="px-1.5 py-0.2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">
+                              밝기 {profile.params.brightness}%
+                            </span>
+                          )}
+                          {profile.params.glare > 0 && (
+                            <span className="px-1.5 py-0.2 bg-orange-50 text-orange-700 border border-orange-200 rounded">
+                              역광 {profile.params.glare}%
+                            </span>
+                          )}
+                          {profile.params.dirt > 0 && (
+                            <span className="px-1.5 py-0.2 bg-stone-100 text-stone-700 border border-stone-200 rounded">
+                              오염 {profile.params.dirt}%
+                            </span>
+                          )}
+                          {(profile.params.rotate !== 0 || profile.params.perspectiveX !== 0) && (
+                            <span className="px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                              각도/원근
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] pt-1">
+                          <span className={`font-semibold flex items-center gap-1 ${
+                            isActive ? 'text-sky-600 font-bold' : 'text-slate-500 group-hover:text-slate-900'
+                          }`}>
+                            {isActive ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-sky-600" />
+                                <span>현재 적용 중</span>
+                              </>
+                            ) : (
+                              <span>클릭하여 로드 (Apply) →</span>
+                            )}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApplyProfile(profile);
+                            }}
+                            className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${
+                              isActive
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                            }`}
+                          >
+                            {isActive ? '적용됨' : '불러오기'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 2.5 Recent Parameters History Tracking */}
+      <div className="border-t border-slate-100 pt-4">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <History className="w-3.5 h-3.5 text-sky-600" />
+              <span>최근 파라미터 히스토리</span>
+            </span>
+            <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+              최근 {history.length} / 5개
+            </span>
+          </div>
+
+          {onToggleHistoryDrawer && (
+            <button
+              onClick={onToggleHistoryDrawer}
+              className="text-[11px] font-semibold text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1"
+            >
+              <span>사이드패널로 보기</span>
+            </button>
+          )}
+        </div>
+
+        <RecentHistoryPanel
+          history={history}
+          currentParams={params}
+          onRestore={onRestoreHistory}
+          onClearHistory={onClearHistory}
+        />
       </div>
 
       {/* 3. Range Sliders for Each Transformation Effect */}
@@ -660,6 +1054,18 @@ export const SimulatorControls: React.FC<SimulatorControlsProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Save to My Presets Modal */}
+      <SavePresetModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        currentParams={params}
+        currentPlateType={plateType}
+        onSaveSuccess={(savedProfile) => {
+          setPresetViewTab('my_presets');
+          handleApplyProfile(savedProfile);
+        }}
+      />
     </div>
   );
 };
