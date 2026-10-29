@@ -86,6 +86,7 @@ export const BulkImageProcessor: React.FC<BulkImageProcessorProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [datasetName, setDatasetName] = useState(() => `ALPR_Dataset_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Gallery view and filters
   const [viewMode, setViewMode] = useState<'grid' | 'comparison' | 'table'>('comparison');
@@ -416,7 +417,26 @@ export const BulkImageProcessor: React.FC<BulkImageProcessorProps> = ({
           {/* Folder & Files Upload Zone */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
             {/* Upload Area */}
-            <div className="md:col-span-7 flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-sky-400 transition-all text-center">
+            <div 
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                handleFilesAdded(e.dataTransfer.files);
+              }}
+              className={`md:col-span-7 flex flex-col justify-between p-6 rounded-2xl border-2 border-dashed transition-all text-center ${
+                isDragging
+                  ? 'border-sky-500 bg-sky-50/80 scale-[1.01]'
+                  : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-sky-400'
+              }`}
+            >
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
                   <FolderUp className="w-6 h-6" />

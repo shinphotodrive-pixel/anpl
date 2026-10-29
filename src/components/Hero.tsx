@@ -1,10 +1,15 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap } from 'lucide-react';
 
 interface HeroProps {
   onScrollToDetector?: () => void;
+  onScrollToLprLab?: () => void;
+  onScrollToHardware?: () => void;
+  onScrollToLprResearch?: () => void;
+  onScrollToTraining?: () => void;
   onScrollToLighting?: () => void;
   onScrollToSimulator: () => void;
+  onScrollToBatch?: () => void;
   onScrollToPresets?: () => void;
   onScrollToTestBench: () => void;
   onScrollToSolutions: () => void;
@@ -12,8 +17,13 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ 
   onScrollToDetector,
+  onScrollToLprLab,
+  onScrollToHardware,
+  onScrollToLprResearch,
+  onScrollToTraining,
   onScrollToLighting,
   onScrollToSimulator, 
+  onScrollToBatch,
   onScrollToPresets,
   onScrollToTestBench, 
   onScrollToSolutions 
@@ -89,6 +99,46 @@ export const Hero: React.FC<HeroProps> = ({
             </button>
           )}
 
+          {onScrollToLprLab && (
+            <button
+              onClick={onScrollToLprLab}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Cpu className="w-4 h-4 text-white" />
+              <span>LPR Lab</span>
+            </button>
+          )}
+
+          {onScrollToHardware && (
+            <button
+              onClick={onScrollToHardware}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-cyan-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <CircuitBoard className="w-4 h-4 text-white" />
+              <span>하드웨어 구성품</span>
+            </button>
+          )}
+
+          {onScrollToLprResearch && (
+            <button
+              onClick={onScrollToLprResearch}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-violet-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <BookOpen className="w-4 h-4 text-white" />
+              <span>LPR 연구(Research)</span>
+            </button>
+          )}
+
+          {onScrollToTraining && (
+            <button
+              onClick={onScrollToTraining}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <GraduationCap className="w-4 h-4 text-white" />
+              <span>번호판 학습 가이드</span>
+            </button>
+          )}
+
           {onScrollToLighting && (
             <button
               onClick={onScrollToLighting}
@@ -106,6 +156,16 @@ export const Hero: React.FC<HeroProps> = ({
             <Sliders className="w-4 h-4 text-slate-950" />
             <span>증강 시뮬레이터</span>
           </button>
+
+          {onScrollToBatch && (
+            <button
+              onClick={onScrollToBatch}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-sky-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <FolderArchive className="w-4 h-4 text-sky-200" />
+              <span>배치 처리기 (Batch)</span>
+            </button>
+          )}
 
           {onScrollToPresets && (
             <button

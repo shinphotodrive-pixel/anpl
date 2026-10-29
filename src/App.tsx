@@ -4,11 +4,16 @@
  */
 
 import React, { useState } from 'react';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
+import { Navbar, NAV_ITEMS } from './components/Navbar';
+import { HomeView } from './components/Home/HomeView';
 import { LicensePlateDetectorSection } from './components/LicensePlateDetector/LicensePlateDetectorSection';
+import { LprLabSection } from './components/LprLab/LprLabSection';
+import { HardwareComponentsSection } from './components/Hardware/HardwareComponentsSection';
+import { LprResearchDashboard } from './components/LprResearch/LprResearchDashboard';
+import { PlateTrainingSection } from './components/Training/PlateTrainingSection';
 import { LightingDashboardSection } from './components/Lighting/LightingDashboardSection';
 import { SimulatorView } from './components/Simulator/SimulatorView';
+import { BatchProcessorSection } from './components/BatchProcessor/BatchProcessorSection';
 import { PresetLibrarySection } from './components/PresetLibrary/PresetLibrarySection';
 import { TestBenchSection } from './components/TestBench/TestBenchSection';
 import { SolutionsView } from './components/Solutions/SolutionsView';
@@ -17,9 +22,10 @@ import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { RoiCalculator } from './components/RoiCalculator';
 import { AugmentationParams, PlateType } from './types/alpr';
 import { Footer } from './components/Footer';
+import { Home, ArrowLeft, ArrowRight, ChevronRight, Layers } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('detector');
+  const [activeTab, setActiveTab] = useState<string>('home');
 
   const defaultParams: AugmentationParams = {
     blur: 0,
@@ -37,61 +43,183 @@ export default function App() {
 
   const [params, setParams] = useState<AugmentationParams>(defaultParams);
 
-  const scrollToSection = (id: string) => {
+  const navigateToTab = (id: string) => {
     setActiveTab(id);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleApplyPreset = (newParams: AugmentationParams, _plateType?: PlateType) => {
     setParams(newParams);
   };
 
+  // Pagination navigation helper for single-page tab views
+  const moduleItems = NAV_ITEMS.filter((item) => item.id !== 'home');
+  const currentModuleIndex = moduleItems.findIndex((item) => item.id === activeTab);
+  const currentItem = NAV_ITEMS.find((item) => item.id === activeTab) || NAV_ITEMS[0];
+  const CurrentIcon = currentItem.icon;
+  const prevTab = currentModuleIndex > 0 ? moduleItems[currentModuleIndex - 1] : null;
+  const nextTab = currentModuleIndex >= 0 && currentModuleIndex < moduleItems.length - 1 ? moduleItems[currentModuleIndex + 1] : null;
+
+  // Render the selected tab's content exclusively (Single page per tab, no giant vertical scrolling)
+  const renderActiveTabContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return <HomeView onNavigate={navigateToTab} />;
+
+      case 'detector':
+        return <LicensePlateDetectorSection />;
+
+      case 'lpr-lab':
+        return <LprLabSection />;
+
+      case 'hardware':
+        return <HardwareComponentsSection />;
+
+      case 'lpr-research':
+        return <LprResearchDashboard />;
+
+      case 'training':
+        return <PlateTrainingSection />;
+
+      case 'lighting':
+        return <LightingDashboardSection />;
+
+      case 'simulator':
+        return <SimulatorView sharedParams={params} setSharedParams={setParams} />;
+
+      case 'batch':
+        return (
+          <BatchProcessorSection
+            currentParams={params}
+            onScrollToSimulator={() => navigateToTab('simulator')}
+          />
+        );
+
+      case 'presets':
+        return <PresetLibrarySection currentParams={params} onApplyPreset={handleApplyPreset} />;
+
+      case 'testbench':
+        return <TestBenchSection currentParams={params} />;
+
+      case 'solutions':
+        return <SolutionsView />;
+
+      case 'challenges':
+        return <ChallengeMatrix />;
+
+      case 'pipeline':
+        return <PipelineVisualizer />;
+
+      case 'roi':
+        return <RoiCalculator />;
+
+      default:
+        return <HomeView onNavigate={navigateToTab} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Sticky Header Navigation */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={navigateToTab} />
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Renders exactly one page per selected tab */}
       <main className="flex-grow">
-        {/* Hero Section */}
-        <Hero
-          onScrollToDetector={() => scrollToSection('detector')}
-          onScrollToLighting={() => scrollToSection('lighting')}
-          onScrollToSimulator={() => scrollToSection('simulator')}
-          onScrollToPresets={() => scrollToSection('presets')}
-          onScrollToTestBench={() => scrollToSection('testbench')}
-          onScrollToSolutions={() => scrollToSection('solutions')}
-        />
+        {/* Module Breadcrumb & Pagination Bar for non-home pages */}
+        {activeTab !== 'home' && (
+          <div className="bg-slate-900/95 border-b border-slate-800 text-slate-300 py-3 px-4 sm:px-6 lg:px-8 sticky top-14 md:top-24 z-40 backdrop-blur-sm shadow-md">
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+              {/* Breadcrumb Left */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigateToTab('home')}
+                  className="hover:text-white flex items-center gap-1 font-medium text-slate-400 hover:underline transition-colors"
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  <span>홈 (전체 개요)</span>
+                </button>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                <span className="text-sky-400 font-bold flex items-center gap-1.5">
+                  <CurrentIcon className="w-4 h-4" />
+                  <span>{currentItem.label}</span>
+                </span>
+                {currentModuleIndex >= 0 && (
+                  <span className="text-slate-500 font-mono text-xs hidden sm:inline">
+                    ({currentModuleIndex + 1} / {moduleItems.length})
+                  </span>
+                )}
+              </div>
 
-        {/* 0. Dedicated License Plate Recognition Program (dataslayermedia/License-Plate-Detection) */}
-        <LicensePlateDetectorSection />
+              {/* Prev / Next Shortcuts Right */}
+              <div className="flex items-center gap-2">
+                {prevTab && (
+                  <button
+                    onClick={() => navigateToTab(prevTab.id)}
+                    className="flex items-center gap-1 text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-xs"
+                    title={`이전: ${prevTab.label}`}
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span className="hidden md:inline">이전:</span> {prevTab.label}
+                  </button>
+                )}
+                {nextTab && (
+                  <button
+                    onClick={() => navigateToTab(nextTab.id)}
+                    className="flex items-center gap-1 text-sky-400 hover:text-sky-300 px-2.5 py-1 rounded-lg bg-sky-950/70 border border-sky-800/70 hover:bg-sky-900/70 transition-colors text-xs font-semibold"
+                    title={`다음: ${nextTab.label}`}
+                  >
+                    <span className="hidden md:inline">다음:</span> {nextTab.label}
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* 0.1 Dedicated Lighting & Optics Technical Analysis Dashboard ("조명") */}
-        <LightingDashboardSection />
+        {/* Tab Page Content */}
+        <div key={activeTab} className="animate-fadeIn">
+          {renderActiveTabContent()}
+        </div>
 
-        {/* 1. Interactive Augmentation Simulator */}
-        <SimulatorView sharedParams={params} setSharedParams={setParams} />
+        {/* Bottom Pagination Bar for non-home pages */}
+        {activeTab !== 'home' && (
+          <div className="bg-slate-900 border-t border-slate-800 py-6 px-4">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+              {prevTab ? (
+                <button
+                  onClick={() => navigateToTab(prevTab.id)}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium transition-all hover:scale-[1.01]"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>이전 탭: {prevTab.label}</span>
+                </button>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
 
-        {/* 2. Standard Environmental Preset Library */}
-        <PresetLibrarySection currentParams={params} onApplyPreset={handleApplyPreset} />
+              <button
+                onClick={() => navigateToTab('home')}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold border border-slate-700 transition-all hover:scale-[1.01]"
+              >
+                <Layers className="w-4 h-4 text-sky-400" />
+                <span>전체 14대 모듈 홈으로</span>
+              </button>
 
-        {/* 3. ALPR Recognition Testing & Benchmark Lab */}
-        <TestBenchSection currentParams={params} />
-
-        {/* 3. 4 Core Production Strategies */}
-        <SolutionsView />
-
-        {/* 4. ALPR Dataset Challenge Matrix */}
-        <ChallengeMatrix />
-
-        {/* 5. End-to-End MLOps Pipeline Visualizer */}
-        <PipelineVisualizer />
-
-        {/* 6. Dataset ROI & Cost Feasibility Calculator */}
-        <RoiCalculator />
+              {nextTab ? (
+                <button
+                  onClick={() => navigateToTab(nextTab.id)}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-sky-600/25 transition-all hover:scale-[1.01]"
+                >
+                  <span>다음 탭: {nextTab.label}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <div className="hidden sm:block" />
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Production Footer */}
