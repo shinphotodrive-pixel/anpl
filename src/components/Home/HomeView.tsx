@@ -6,6 +6,7 @@ import {
   CircuitBoard, 
   BookOpen, 
   GraduationCap, 
+  Brain,
   Lightbulb, 
   Sliders, 
   FolderArchive, 
@@ -15,6 +16,8 @@ import {
   Database, 
   GitBranch, 
   Calculator,
+  Coins,
+  CheckSquare,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -95,6 +98,17 @@ const MODULE_CARDS: ModuleCard[] = [
     stats: '200만+ 장 공공 데이터'
   },
   {
+    id: 'models',
+    title: 'AI 모델 및 엣지 추론 엔진',
+    subTitle: 'OpenCV DNN vs ONNX Runtime & 99.8% 달성 기법',
+    description: 'PyTorch 없는 OpenCV DNN C++/Python 무의존성 배포, 초경량 ONNX(YOLOv8n, LPRNet 1.9MB) 양자화, 형태학적 오인식 방지 및 장단점 심층 분석.',
+    icon: Brain,
+    category: 'research',
+    color: 'from-indigo-500/20 to-cyan-500/10 border-indigo-500/40 text-indigo-400',
+    badge: 'ONNX/DNN',
+    stats: '1.9MB 초경량 모델'
+  },
+  {
     id: 'lighting',
     title: '조명 및 광학 기술 분석',
     subTitle: 'Illumination & Exposure Control',
@@ -126,6 +140,17 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-blue-500/20 to-indigo-500/10 border-blue-500/40 text-blue-400',
     badge: '대량 증강',
     stats: 'ZIP 일괄 내보내기'
+  },
+  {
+    id: 'validator',
+    title: '합성 데이터 무결성 검증기',
+    subTitle: 'YOLO & Pascal VOC Sanity Validator',
+    description: '생성된 합성 이미지 및 어노테이션 파일의 정규화(0-1), 프레임 경계 초과, 최소 해상도 픽셀 밀도, 종횡비 자동 검증 및 원클릭 복구.',
+    icon: CheckSquare,
+    category: 'simulation',
+    color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-400',
+    badge: '어노테이션 검증',
+    stats: '6대 무결성 체크'
   },
   {
     id: 'presets',
@@ -192,12 +217,23 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-emerald-500/20 to-cyan-500/10 border-emerald-500/40 text-emerald-400',
     badge: '경제성 분석',
     stats: '투자 대비 효과 산출'
+  },
+  {
+    id: 'cost-estimator',
+    title: '데이터셋 비용 추정기',
+    subTitle: 'Cloud Storage & GPU Compute Estimator',
+    description: '로컬/클라우드 환경에서 대량 데이터셋 생성 시 발생하는 S3/GCS 스토리지 보관비, 송신비, GPU 연산비를 실시간 산출하고 TCO를 비교.',
+    icon: Coins,
+    category: 'benchmark',
+    color: 'from-amber-500/20 to-emerald-500/10 border-amber-500/40 text-amber-300',
+    badge: 'GPU/스토리지 비용',
+    stats: '클라우드 vs 로컬 TCO'
   }
 ];
 
 export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   return (
-    <div className="bg-slate-950 text-slate-100">
+    <div className="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
       {/* Hero Section */}
       <Hero
         onScrollToDetector={() => onNavigate('detector')}
@@ -205,6 +241,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         onScrollToHardware={() => onNavigate('hardware')}
         onScrollToLprResearch={() => onNavigate('lpr-research')}
         onScrollToTraining={() => onNavigate('training')}
+        onScrollToModels={() => onNavigate('models')}
         onScrollToLighting={() => onNavigate('lighting')}
         onScrollToSimulator={() => onNavigate('simulator')}
         onScrollToBatch={() => onNavigate('batch')}
@@ -216,27 +253,27 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       {/* Module Hub Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs font-semibold text-sky-400 mb-3 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs font-semibold text-sky-600 dark:text-sky-400 mb-3 uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
             <span>ALPR Complete Suite Directory</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            14대 핵심 모듈 전체 둘러보기
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            ALPR 17대 핵심 모듈 전체 둘러보기
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             원하시는 메뉴 탭을 선택하시면 스크롤 없이 해당 페이지로 독립 전환되어 상세 연구 자료 및 인터랙티브 툴을 사용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Grid of 14 Modules */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Grid of 17 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MODULE_CARDS.map((item) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`group relative bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 rounded-2xl p-6 transition-all duration-200 cursor-pointer hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between`}
+                className={`group relative bg-white dark:bg-slate-900/90 hover:bg-slate-50 dark:hover:bg-slate-800/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 transition-all duration-200 cursor-pointer shadow-xs dark:shadow-xl hover:shadow-md dark:hover:shadow-2xl hover:-translate-y-1 flex flex-col justify-between`}
               >
                 <div>
                   {/* Top Bar inside card */}
@@ -244,29 +281,29 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} border flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                       {item.badge}
                     </span>
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h3 className="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                     {item.title}
                   </h3>
-                  <div className="text-xs font-mono text-slate-400 mb-2">
+                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mb-2">
                     {item.subTitle}
                   </div>
 
                   {/* Description */}
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-4">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
                     {item.description}
                   </p>
                 </div>
 
                 {/* Card Footer */}
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs">
                   {item.stats ? (
-                    <span className="text-slate-400 font-mono font-medium">
+                    <span className="text-slate-500 dark:text-slate-400 font-mono font-medium">
                       {item.stats}
                     </span>
                   ) : <span />}
@@ -276,7 +313,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                       e.stopPropagation();
                       onNavigate(item.id);
                     }}
-                    className="inline-flex items-center gap-1.5 font-bold text-sky-400 group-hover:text-sky-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 font-bold text-sky-600 dark:text-sky-400 group-hover:text-sky-500 dark:group-hover:text-sky-300 transition-colors"
                   >
                     <span>페이지 열기</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

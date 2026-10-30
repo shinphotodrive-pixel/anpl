@@ -58,8 +58,8 @@ export const SolutionsView: React.FC = () => {
           </p>
         </div>
 
-        {/* 4 Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 4 Cards Grid: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {SOLUTIONS_DATA.map((sol) => (
             <div
               key={sol.id}

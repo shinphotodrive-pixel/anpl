@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain } from 'lucide-react';
 
 interface HeroProps {
   onScrollToDetector?: () => void;
@@ -7,6 +7,7 @@ interface HeroProps {
   onScrollToHardware?: () => void;
   onScrollToLprResearch?: () => void;
   onScrollToTraining?: () => void;
+  onScrollToModels?: () => void;
   onScrollToLighting?: () => void;
   onScrollToSimulator: () => void;
   onScrollToBatch?: () => void;
@@ -21,6 +22,7 @@ export const Hero: React.FC<HeroProps> = ({
   onScrollToHardware,
   onScrollToLprResearch,
   onScrollToTraining,
+  onScrollToModels,
   onScrollToLighting,
   onScrollToSimulator, 
   onScrollToBatch,
@@ -136,6 +138,16 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <GraduationCap className="w-4 h-4 text-white" />
               <span>번호판 학습 가이드</span>
+            </button>
+          )}
+
+          {onScrollToModels && (
+            <button
+              onClick={onScrollToModels}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Brain className="w-4 h-4 text-white" />
+              <span>AI 모델 (ONNX/DNN)</span>
             </button>
           )}
 

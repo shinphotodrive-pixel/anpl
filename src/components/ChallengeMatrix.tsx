@@ -73,8 +73,8 @@ export const ChallengeMatrix: React.FC = () => {
           </div>
         </div>
 
-        {/* Challenge Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Challenge Cards Grid: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {filteredChallenges.map((item) => (
             <div
               key={item.id}

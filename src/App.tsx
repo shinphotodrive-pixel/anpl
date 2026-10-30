@@ -11,17 +11,19 @@ import { LprLabSection } from './components/LprLab/LprLabSection';
 import { HardwareComponentsSection } from './components/Hardware/HardwareComponentsSection';
 import { LprResearchDashboard } from './components/LprResearch/LprResearchDashboard';
 import { PlateTrainingSection } from './components/Training/PlateTrainingSection';
+import { ModelShowcaseSection } from './components/Model/ModelShowcaseSection';
 import { LightingDashboardSection } from './components/Lighting/LightingDashboardSection';
 import { SimulatorView } from './components/Simulator/SimulatorView';
 import { BatchProcessorSection } from './components/BatchProcessor/BatchProcessorSection';
+import { DataValidatorSection } from './components/DataValidator/DataValidatorSection';
 import { PresetLibrarySection } from './components/PresetLibrary/PresetLibrarySection';
 import { TestBenchSection } from './components/TestBench/TestBenchSection';
 import { SolutionsView } from './components/Solutions/SolutionsView';
 import { ChallengeMatrix } from './components/ChallengeMatrix';
 import { PipelineVisualizer } from './components/PipelineVisualizer';
 import { RoiCalculator } from './components/RoiCalculator';
+import { CostEstimatorSection } from './components/CostEstimator/CostEstimatorSection';
 import { AugmentationParams, PlateType } from './types/alpr';
-import { Footer } from './components/Footer';
 import { Home, ArrowLeft, ArrowRight, ChevronRight, Layers } from 'lucide-react';
 
 export default function App() {
@@ -81,6 +83,9 @@ export default function App() {
       case 'training':
         return <PlateTrainingSection />;
 
+      case 'models':
+        return <ModelShowcaseSection />;
+
       case 'lighting':
         return <LightingDashboardSection />;
 
@@ -94,6 +99,9 @@ export default function App() {
             onScrollToSimulator={() => navigateToTab('simulator')}
           />
         );
+
+      case 'validator':
+        return <DataValidatorSection />;
 
       case 'presets':
         return <PresetLibrarySection currentParams={params} onApplyPreset={handleApplyPreset} />;
@@ -113,13 +121,16 @@ export default function App() {
       case 'roi':
         return <RoiCalculator />;
 
+      case 'cost-estimator':
+        return <CostEstimatorSection />;
+
       default:
         return <HomeView onNavigate={navigateToTab} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* Sticky Header Navigation */}
       <Navbar activeTab={activeTab} setActiveTab={navigateToTab} />
 
@@ -127,24 +138,24 @@ export default function App() {
       <main className="flex-grow">
         {/* Module Breadcrumb & Pagination Bar for non-home pages */}
         {activeTab !== 'home' && (
-          <div className="bg-slate-900/95 border-b border-slate-800 text-slate-300 py-3 px-4 sm:px-6 lg:px-8 sticky top-14 md:top-24 z-40 backdrop-blur-sm shadow-md">
+          <div className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 py-3 px-4 sm:px-6 lg:px-8 sticky top-14 md:top-24 z-40 backdrop-blur-sm shadow-xs dark:shadow-md transition-colors duration-200">
             <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
               {/* Breadcrumb Left */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigateToTab('home')}
-                  className="hover:text-white flex items-center gap-1 font-medium text-slate-400 hover:underline transition-colors"
+                  className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400 hover:underline transition-colors"
                 >
                   <Home className="w-3.5 h-3.5" />
                   <span>홈 (전체 개요)</span>
                 </button>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                <span className="text-sky-400 font-bold flex items-center gap-1.5">
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
+                <span className="text-sky-600 dark:text-sky-400 font-bold flex items-center gap-1.5">
                   <CurrentIcon className="w-4 h-4" />
                   <span>{currentItem.label}</span>
                 </span>
                 {currentModuleIndex >= 0 && (
-                  <span className="text-slate-500 font-mono text-xs hidden sm:inline">
+                  <span className="text-slate-400 dark:text-slate-500 font-mono text-xs hidden sm:inline">
                     ({currentModuleIndex + 1} / {moduleItems.length})
                   </span>
                 )}
@@ -155,7 +166,7 @@ export default function App() {
                 {prevTab && (
                   <button
                     onClick={() => navigateToTab(prevTab.id)}
-                    className="flex items-center gap-1 text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors text-xs"
+                    className="flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs border border-slate-200 dark:border-transparent"
                     title={`이전: ${prevTab.label}`}
                   >
                     <ArrowLeft className="w-3 h-3" />
@@ -165,7 +176,7 @@ export default function App() {
                 {nextTab && (
                   <button
                     onClick={() => navigateToTab(nextTab.id)}
-                    className="flex items-center gap-1 text-sky-400 hover:text-sky-300 px-2.5 py-1 rounded-lg bg-sky-950/70 border border-sky-800/70 hover:bg-sky-900/70 transition-colors text-xs font-semibold"
+                    className="flex items-center gap-1 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-800/70 hover:bg-sky-100 dark:hover:bg-sky-900/70 transition-colors text-xs font-semibold"
                     title={`다음: ${nextTab.label}`}
                   >
                     <span className="hidden md:inline">다음:</span> {nextTab.label}
@@ -184,12 +195,12 @@ export default function App() {
 
         {/* Bottom Pagination Bar for non-home pages */}
         {activeTab !== 'home' && (
-          <div className="bg-slate-900 border-t border-slate-800 py-6 px-4">
+          <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 px-4 transition-colors duration-200">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
               {prevTab ? (
                 <button
                   onClick={() => navigateToTab(prevTab.id)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium transition-all hover:scale-[1.01]"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium transition-all hover:scale-[1.01] border border-slate-200 dark:border-transparent"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>이전 탭: {prevTab.label}</span>
@@ -200,10 +211,10 @@ export default function App() {
 
               <button
                 onClick={() => navigateToTab('home')}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold border border-slate-700 transition-all hover:scale-[1.01]"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 transition-all hover:scale-[1.01]"
               >
-                <Layers className="w-4 h-4 text-sky-400" />
-                <span>전체 14대 모듈 홈으로</span>
+                <Layers className="w-4 h-4 text-sky-500" />
+                <span>전체 17대 모듈 홈으로</span>
               </button>
 
               {nextTab ? (
@@ -221,9 +232,6 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* Production Footer */}
-      <Footer />
     </div>
   );
 }

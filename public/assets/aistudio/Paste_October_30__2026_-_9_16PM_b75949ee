@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>지능형 교통 시스템(ITS) 번호판 인식(ANPR) AI 모델 심층 분석</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Custom Scrollbar and Chart Container Styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 320px;
+      max-height: 400px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 360px;
+      }
+    }
+  </style>
+  <!-- Chosen Palette: Warm Neutral Slate & Amber Tech (Background: Slate-50/White, Accents: Slate-800, Amber-600, Indigo-600, Emerald-600) -->
+  <!-- Application Structure Plan: 
+       1. Header & Navigation: Sticky header with system overview badge, navigation tabs corresponding to logical analysis topics rather than rigid report chapters (Overview/Simulator, Inference Engines, Detection & Quantization, LPR OCR, Super-Resolution, Korean Rules & Regex Engine).
+       2. Tab 1 - Overview & Pipeline Simulator: Interactive end-to-end ANPR Pipeline simulator where users can change optical conditions (Low Light, High Speed, Low Res) and see live pipeline state updates, metrics, and step-by-step logic.
+       3. Tab 2 - Inference Engine Benchmark: Interactive comparison between OpenCV 5 DNN and ONNX Runtime / TensorRT across CPU vs GPU environments, operator coverage, and zero-dependency edge benefits.
+       4. Tab 3 - Object Detection & INT8 Quantization: Detailed benchmark chart and interactive calculator comparing PyTorch FP32, TensorRT FP16, and TensorRT INT8 on Jetson Orin NX and Raspberry Pi 5.
+       5. Tab 4 - LPR OCR Engine Comparison: LPRNet (CTC+STN) vs PP-OCRv4 Mobile side-by-side comparison matrix and dynamic performance trade-off chart.
+       6. Tab 5 - Image Enhancement & Super-Resolution: CLAHE/Retinex vs Real-ESRGAN quality metrics (PSNR, SSIM) with live simulated image comparison tool and OCR accuracy impact analysis.
+       7. Tab 6 - Korean License Plate & Regex Post-Processing: Interactive Regex Validator tool for Korean license plate formats (8-digit, 7-digit, electric, commercial) allowing real-time input testing and auto-correction.
+  -->
+  <!-- Visualization & Content Choices: 
+       - Quantization FPS & Latency -> Dynamic Grouped Bar Chart (Chart.js Canvas) -> User switches metrics (FPS vs Latency vs VRAM) -> Clear comparison of INT8 speedup -> Chart.js Canvas.
+       - Image Restoration Impact -> Dynamic Horizontal Bar Chart (Chart.js Canvas) -> Compares PSNR, SSIM, mAP, OCR accuracy before vs after Real-ESRGAN -> Shows drastic +25.76% OCR accuracy jump -> Chart.js Canvas.
+       - Pipeline Interactive Visual Simulator -> Dynamic HTML/CSS pipeline cards with JS state -> User selects weather/speed pre-set -> Explains active modules & Latency budget.
+       - Korean License Plate Regex Tester -> Interactive JS string parsing & matrix logic -> Real-time typing feedback with positional error correction -> Demonstrates post-processing reliability.
+       - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+  -->
+  <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-amber-100 selection:text-amber-900">
+
+  <!-- Top App Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-slate-900 text-white shadow-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black text-xl shadow">
+          📷
+        </div>
+        <div>
+          <h1 class="text-lg font-extrabold text-white leading-tight flex items-center gap-2">
+            ANPR 엣지 AI 심층 분석 시스템
+            <span class="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 font-normal">ITS Edge AI Report</span>
+          </h1>
+          <p class="text-xs text-slate-400">OpenCV 5 DNN, TensorRT INT8, LPRNet, Real-ESRGAN 및 한국형 규격 후처리 통합 가이드</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2 text-xs">
+        <span class="px-2.5 py-1 bg-slate-800 text-emerald-400 rounded-lg border border-slate-700 flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          온디바이스 99%+ 목표
+        </span>
+        <button onclick="quickArchitectureModal()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg transition shadow">
+          💡 핵심 권고안 요약
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-slate-950 border-t border-slate-800/80 px-4 overflow-x-auto">
+      <div class="max-w-7xl mx-auto flex space-x-1 sm:space-x-2 text-xs font-medium py-2 whitespace-nowrap">
+        <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn px-3 py-2 rounded-lg bg-amber-500 text-slate-950 font-bold transition flex items-center gap-1.5">
+          <span>📌</span> 파이프라인 시뮬레이터
+        </button>
+        <button onclick="switchTab('tab-engine')" id="nav-tab-engine" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>⚡</span> 추론 엔진 (OpenCV vs ONNX)
+        </button>
+        <button onclick="switchTab('tab-yolo')" id="nav-tab-yolo" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>🎯</span> YOLO 탐지 & INT8 양자화
+        </button>
+        <button onclick="switchTab('tab-ocr')" id="nav-tab-ocr" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>🔤</span> LPR OCR (LPRNet vs PP-OCR)
+        </button>
+        <button onclick="switchTab('tab-enhancement')" id="nav-tab-enhancement" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>🔬</span> 저조도·초해상화 (Real-ESRGAN)
+        </button>
+        <button onclick="switchTab('tab-korean')" id="nav-tab-korean" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <span>🇰🇷</span> 한국형 규격 & Regex 검증
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: 파이프라인 개요 및 실시간 시뮬레이터 -->
+    <!-- ========================================== -->
+    <section id="tab-overview" class="tab-content space-y-6">
+      
+      <!-- Intro Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white shadow-lg border border-slate-700/50">
+        <div class="max-w-3xl space-y-2">
+          <div class="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 text-xs px-2.5 py-1 rounded-md border border-amber-500/30 font-semibold">
+            <span>🚀</span> 온디바이스(On-device) ANPR 패러다임 전환
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold tracking-tight">지능형 교통 시스템을 위한 5단계 End-to-End ANPR 파이프라인</h2>
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            클라우드 연산의 네트워크 지연시간(Latency)과 대역폭 포화를 극복하기 위해 최신 ANPR 기술은 카메라 인접 엣지 디바이스에서 전처리, 탐지, 초해상화, OCR, 후처리까지 실시간으로 완수하는 통합 아키텍처로 진화하고 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- Key Metrics Overview Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow transition">
+          <div class="text-xs text-slate-500 font-medium">YOLOv8 INT8 속도</div>
+          <div class="text-2xl font-black text-slate-900 mt-1">65 FPS <span class="text-xs text-emerald-600 font-normal">↑2.1x</span></div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Jetson Orin NX 기준 (3.49ms)</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow transition">
+          <div class="text-xs text-slate-500 font-medium">OpenCV 5 연산자 지원</div>
+          <div class="text-2xl font-black text-amber-600 mt-1">80%+ <span class="text-xs text-amber-600 font-normal">(과거 22%)</span></div>
+          <p class="text-[11px] text-slate-500 mt-0.5">그래프 기반 엔진 및 HAL 적용</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow transition">
+          <div class="text-xs text-slate-500 font-medium">PP-OCRv4 Mobile 크기</div>
+          <div class="text-2xl font-black text-indigo-600 mt-1">6.8 MB</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">83.28% 라인 인식 정확도</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow transition">
+          <div class="text-xs text-slate-500 font-medium">초해상화 정확도 상승</div>
+          <div class="text-2xl font-black text-emerald-600 mt-1">+25.76%</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Real-ESRGAN 전처리 후 OCR</p>
+        </div>
+      </div>
+
+      <!-- Interactive ANPR Pipeline Interactive Simulator -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+              <span>🎮</span> 대화형 ANPR 파이프라인 시뮬레이터
+            </h3>
+            <p class="text-xs text-slate-500">주행 및 광학 조건을 선택하여 각 파이프라인 모듈의 모드와 예상 지연시간을 확인하세요.</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-slate-600 font-medium">환경 프리셋:</span>
+            <button onclick="setPipelineScenario('sunny')" id="scen-sunny" class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold">주간 정상</button>
+            <button onclick="setPipelineScenario('night')" id="scen-night" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">야간 헤드라이트</button>
+            <button onclick="setPipelineScenario('blurry')" id="scen-blurry" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">원거리/저해상도</button>
+          </div>
+        </div>
+
+        <!-- Simulator Workflow Steps Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
+          
+          <!-- Step 1 -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                <span>단계 1</span>
+                <span id="sim-step1-time" class="text-amber-600">0.0ms</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800">프레임 캡처 & 전처리</h4>
+              <p id="sim-step1-desc" class="text-[11px] text-slate-600 mt-1">기본 RGB 캡처 및 직렬화 차단 단일 메모리 블롭 생성.</p>
+            </div>
+            <div id="sim-step1-badge" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-semibold text-center">
+              Standard Pass
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                <span>단계 2</span>
+                <span id="sim-step2-time" class="text-amber-600">0.0ms</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800">광학 보정 / 초해상화</h4>
+              <p id="sim-step2-desc" class="text-[11px] text-slate-600 mt-1">조도 균일화 및 결손 픽셀 재건.</p>
+            </div>
+            <div id="sim-step2-badge" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-semibold text-center">
+              Bypass (Pass)
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                <span>단계 3</span>
+                <span id="sim-step3-time" class="text-amber-600">3.5ms</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800">번호판 탐지 (LPD)</h4>
+              <p id="sim-step3-desc" class="text-[11px] text-slate-600 mt-1">YOLOv8n TensorRT INT8 기반 ROI 바운딩 박스 추출.</p>
+            </div>
+            <div id="sim-step3-badge" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-semibold text-center">
+              YOLOv8 INT8
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                <span>단계 4</span>
+                <span id="sim-step4-time" class="text-amber-600">5.0ms</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800">문자 인식 (LPR OCR)</h4>
+              <p id="sim-step4-desc" class="text-[11px] text-slate-600 mt-1">STN 기반 기울임 보정 및 1D-Conv CTC 시퀀스 인식.</p>
+            </div>
+            <div id="sim-step4-badge" class="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-mono font-semibold text-center">
+              LPRNet + STN
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+                <span>단계 5</span>
+                <span id="sim-step5-time" class="text-amber-600">0.8ms</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800">Regex & 궤적 후처리</h4>
+              <p id="sim-step5-desc" class="text-[11px] text-slate-600 mt-1">한국 8자리/7자리 문법 매핑 및 시계열 보정.</p>
+            </div>
+            <div id="sim-step5-badge" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-mono font-semibold text-center">
+              Regex Mapping
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Simulator Result Bar -->
+        <div class="bg-slate-900 text-white p-3.5 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-3">
+            <span class="text-slate-400">시뮬레이션 출력 결과:</span>
+            <span id="sim-output-plate" class="font-mono text-lg font-black text-amber-400 bg-slate-950 px-3 py-1 rounded border border-slate-800">
+              123가 4568
+            </span>
+            <span id="sim-output-status" class="bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-semibold">
+              정상 인식 (신뢰도 99.4%)
+            </span>
+          </div>
+          <div class="flex items-center gap-4">
+            <div>총 파이프라인 지연시간: <strong id="sim-total-latency" class="text-amber-400 text-sm">9.3 ms</strong></div>
+            <div>예상 프레임률: <strong id="sim-total-fps" class="text-emerald-400 text-sm">107.5 FPS</strong></div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 2: 추론 엔진 비교 (OpenCV 5 vs ONNX/TensorRT) -->
+    <!-- ========================================== -->
+    <section id="tab-engine" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span>⚡</span> 추론 런타임 엔진 구조 비교: OpenCV 5 DNN vs ONNX Runtime / TensorRT
+        </h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          OpenCV 5는 기존 레이어 연속 방식에서 탈피하여 <strong>'그래프 기반 추론 엔진'</strong>으로 전면 재설계되었습니다. 형상 추론, 상수 폴딩, 메모리 재사용을 전역 최적화하고 하드웨어 추상화 계층(HAL)을 도입함으로써, CPU 단독 임베디드 장비에서 기존 ONNX Runtime 대비 2배 이상의 빠른 추론 속도를 달성하기도 합니다.
+        </p>
+      </div>
+
+      <!-- Engine Benchmark Charts & Comparison Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Chart -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 text-sm">하드웨어별 지연시간(Latency) 비교</h3>
+            <span class="text-[11px] text-slate-500">YOLOv8 Nano 추론 기준 (ms)</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="engineComparisonChart"></canvas>
+          </div>
+          <p class="text-[11px] text-slate-500 italic text-center">
+            * CPU 환경에서는 OpenCV 5의 전전처리 통합 직렬화 차단 효과로 높은 우위를 보이며, GPU 환경에서는 TensorRT/ONNX Runtime이 텐서 코어 레이어 융합을 통해 최고 속도를 달성함.
+          </p>
+        </div>
+
+        <!-- Right: Comparison Table Card -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">런타임 특성 정밀 비교표</h3>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                  <th class="p-2.5">비교 지표</th>
+                  <th class="p-2.5">OpenCV 5 DNN</th>
+                  <th class="p-2.5">ONNX Runtime / TensorRT</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr>
+                  <td class="p-2.5 font-bold text-slate-900">추론 백엔드</td>
+                  <td class="p-2.5">CPU, OpenCL, CUDA</td>
+                  <td class="p-2.5">CPU, CUDA, TensorRT, DirectML</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-slate-900">ONNX 호환성</td>
+                  <td class="p-2.5 text-amber-700 font-medium">80%+ (그래프 통합)</td>
+                  <td class="p-2.5 text-emerald-700 font-medium">100% (네이티브 지원)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-slate-900">시스템 의존성</td>
+                  <td class="p-2.5 text-emerald-700 font-medium">Zero-dependency (단일)</td>
+                  <td class="p-2.5 text-slate-500">별도 라이브러리 및 전처리 필요</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-slate-900">메모리 점유율</td>
+                  <td class="p-2.5 text-emerald-700 font-medium">경량 (경량화 빌드 시 45MB)</td>
+                  <td class="p-2.5 text-slate-500">보통~큼 (GPU 드라이버 종속)</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-slate-900">INT8 양자화</td>
+                  <td class="p-2.5 text-slate-500">부분적 (QDQ 지원 확장 중)</td>
+                  <td class="p-2.5 text-emerald-700 font-medium">FP16, INT8 보정 완벽 지원</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+            <span class="font-bold flex items-center gap-1">💡 아키텍처 배포 제언:</span>
+            <p class="text-[11px] leading-relaxed">
+              자원이 극히 제한된 소형 ARM SoC 디바이스(Raspberry Pi, NXP i.MX8M)에는 <strong>OpenCV 5 DNN</strong> 단일 파이프라인이 유리하며, 시속 100km+ 다채널 초고속 관제가 필요한 엣지 GPU 서버(NVIDIA Jetson Orin)에는 <strong>ONNX Export → TensorRT INT8 양자화</strong> 접근법이 권장됩니다.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 3: YOLO 탐지 & INT8 양자화 최적화 -->
+    <!-- ========================================== -->
+    <section id="tab-yolo" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span>🎯</span> 차량 및 번호판 탐지(LPD): 초경량 YOLO 및 TensorRT INT8 양자화
+        </h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          YOLOv8/v10/v11은 Anchor-free 구조와 C2f 모듈을 적용하여 소형 번호판 객체 탐지에 최적화되어 있습니다. 특히 TensorRT 사후 훈련 양자화(PTQ)를 적용하여 FP32 부동소수점을 8비트 정수(INT8)로 변환하면 mAP 손실을 1% 내외로 방지하면서 추론 프레임 속도를 2배 이상 끌어올릴 수 있습니다.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Interactive Benchmark Switcher & Chart -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 text-sm">Jetson Orin NX (8GB) 정밀도별 벤치마크</h3>
+            <div class="flex items-center gap-1 text-xs">
+              <button onclick="updateQuantChart('fps')" id="btn-quant-fps" class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold">FPS (처리량)</button>
+              <button onclick="updateQuantChart('latency')" id="btn-quant-latency" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">지연시간 (ms)</button>
+              <button onclick="updateQuantChart('vram')" id="btn-quant-vram" class="px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200">VRAM (GB)</button>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="quantizationChart"></canvas>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 text-center text-xs pt-2">
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <span class="text-slate-500 text-[10px]">FP32 (PyTorch)</span>
+              <p class="font-bold text-slate-800 text-sm mt-0.5">30 FPS / 21.9ms</p>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <span class="text-slate-500 text-[10px]">FP16 (TensorRT)</span>
+              <p class="font-bold text-amber-600 text-sm mt-0.5">50 FPS / 7.3ms</p>
+            </div>
+            <div class="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
+              <span class="text-emerald-700 text-[10px] font-semibold">INT8 (TensorRT)</span>
+              <p class="font-bold text-emerald-800 text-sm mt-0.5">65 FPS / 3.49ms</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raspberry Pi 5 & CPU INT8 Highlight Card -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🍓</span> Raspberry Pi 5 (CPU 전용) INT8 양자화 성과
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              외장 GPU가 없는 초저가 임베디드 환경에서도 YOLOv11 Nano 모델에 NCNN/TFLite 사후 훈련 INT8 양자화를 적용한 결과 혁신적인 성능 향상이 입증되었습니다.
+            </p>
+            
+            <div class="space-y-2 pt-1 text-xs">
+              <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <span class="text-slate-600">FP32 원본 속도:</span>
+                <span class="font-mono font-bold text-slate-700">5.12 FPS (195.38 ms)</span>
+              </div>
+              <div class="flex items-center justify-between bg-emerald-50 p-2.5 rounded-lg border border-emerald-200">
+                <span class="text-emerald-800 font-semibold">INT8 양자화 적용 후:</span>
+                <span class="font-mono font-bold text-emerald-700">12.98 FPS (77.03 ms) <span class="text-[10px] bg-emerald-200 text-emerald-900 px-1 rounded">↑146%</span></span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500">
+              * 고가의 GPU 보드 없이도 저속 ADAS 및 스마트 주차 차단기 엣지 구축 가능.
+            </p>
+          </div>
+
+          <!-- Technical Tip Card -->
+          <div class="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
+            <h4 class="font-bold text-amber-400 flex items-center gap-1.5">
+              <span>⚡</span> NMS-Free YOLOv11 아키텍처 혁신
+            </h4>
+            <p class="text-slate-300 leading-relaxed text-[11px]">
+              YOLOv11은 비-최대 억제(NMS) 후처리 연산을 네트워크 내부에 내재화하여, CPU 추론 지연을 유발하던 포스트 프로세싱 오버헤드를 완벽히 제거했습니다.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 4: LPR OCR 모델 비교 (LPRNet vs PP-OCRv4) -->
+    <!-- ========================================== -->
+    <section id="tab-ocr" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span>🔤</span> 광학 문자 인식(LPR): LPRNet vs PP-OCRv4 Mobile 모델 분석
+        </h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          과거의 개별 문자 분할(Segmentation) 방식의 오류를 타파하기 위해 최신 LPR 아키텍처는 문자열 전체를 한 번에 복원하는 End-to-End CTC(Connectionist Temporal Classification) 구조를 사용합니다.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Side-by-Side Comparison Matrix -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">LPRNet vs PP-OCRv4 Mobile 모델 특성 비교</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- LPRNet Card -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 text-sm">LPRNet</h4>
+                <span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">번호판 전용</span>
+              </div>
+              <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
+                <li><strong>특징:</strong> RNN/LSTM 완전히 배제. 1D Conv + CTC 기반 극초경량.</li>
+                <li><strong>기울임 보정:</strong> 내장 공간 변환 네트워크(STN) 탑재로 비스듬한 번호판 강건성(96.4%+).</li>
+                <li><strong>한계점:</strong> '0'과 'O', '5'와 'S' 간의 휴리스틱 구분 혼동 경향.</li>
+                <li><strong>적용 권장:</strong> 단일 행의 명확한 번호판 빠른 속도 판독.</li>
+              </ul>
+            </div>
+
+            <!-- PP-OCRv4 Card -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900 text-sm">PP-OCRv4 Mobile</h4>
+                <span class="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">범용 텍스트</span>
+              </div>
+              <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
+                <li><strong>특징:</strong> Light-Transformer + CNN 융합. 모델 크기 단 6.8MB (영어/숫자).</li>
+                <li><strong>라인 정확도:</strong> 83.28% 엄격 라인 정확도 (서버급 모델 육박).</li>
+                <li><strong>장점:</strong> 다국어, 특수 기호, 2열 다층 번호판 유연 대응.</li>
+                <li><strong>적용 권장:</strong> 버스 측면 문구, 대형차량 다층 번호판 등 복합 ITS.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- OCR Model Trade-off Radar/Bar Chart -->
+          <div class="pt-2">
+            <h4 class="font-bold text-slate-800 text-xs mb-2">모델 성능 다각도 다이어그램 (Chart.js)</h4>
+            <div class="chart-container">
+              <canvas id="ocrComparisonChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Detail Architecture Explanation -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🧠</span> LPRNet의 STN (Spatial Transformer Network)
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              LPRNet 내부의 STN 서브네트워크는 입력된 번호판의 기하학적 왜곡(기울어짐, 회전, 투시 변형)을 별도의 사전 정렬 알고리즘 없이 신경망 내부에서 자율적으로 아핀 변환(Affine Transformation)시켜 수평으로 펴주는 역할을 수행합니다.
+            </p>
+            <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-xs text-amber-900 font-medium">
+              기울어진 45도 각도 촬영에서도 96.4% 이상의 OCR 신뢰도 유지.
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+              <span>🔄</span> Paddle2ONNX 변환 시 유의사항
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              PP-OCRv4 파이프라인(.pdparams)을 ONNX로 변환할 때 특정 커널(oneDNN brgemm) 미지원으로 인한 메모리 누수 또는 멀티스레드 지연(장당 2000ms 오버헤드) 이슈가 발생할 수 있으므로 패치 적용이 필수적입니다.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 5: 화질 개선 & 초해상화 (CLAHE / Real-ESRGAN) -->
+    <!-- ========================================== -->
+    <section id="tab-enhancement" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span>🔬</span> 악천후 및 저조도 환경 극복: 전처리 보정 및 Real-ESRGAN 초해상화
+        </h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          야간 헤드라이트 반사, 안개, 원거리 촬영 시 번호판 픽셀 밀도가 30x10 수준으로 붕괴되는 현상을 극복하기 위해 CLAHE 히스토그램 보정 및 Real-ESRGAN 딥러닝 초해상화(Super-Resolution) 모델을 적용합니다.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Real-ESRGAN Accuracy Impact Chart -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-slate-900 text-sm">Real-ESRGAN 적용 전/후 다운스트림 성능 향상</h3>
+          <div class="chart-container">
+            <canvas id="superResChart"></canvas>
+          </div>
+          <p class="text-[11px] text-slate-500 italic text-center">
+            * Real-ESRGAN 적용 후 PSNR +4.21 dB, SSIM +0.12 상승하며, 탐지 정확도(mAP) +23.26%, OCR 인식률 +25.76% 급증.
+          </p>
+        </div>
+
+        <!-- Right: Interactive Before/After Visual Comparison Simulation Tool -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">
+            🖼️ 초해상화 & 조도 보정 대화형 비교 시뮬레이터
+          </h3>
+          
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-600 font-medium">전처리 모드 선택:</span>
+              <div class="flex gap-1">
+                <button onclick="setEnhanceMode('raw')" id="btn-enh-raw" class="px-2 py-1 bg-slate-200 text-slate-800 rounded font-semibold text-[11px]">원본 (열화)</button>
+                <button onclick="setEnhanceMode('clahe')" id="btn-enh-clahe" class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px]">CLAHE 보정</button>
+                <button onclick="setEnhanceMode('sr')" id="btn-enh-sr" class="px-2 py-1 bg-amber-500 text-slate-950 font-bold rounded text-[11px]">Real-ESRGAN 4x</button>
+              </div>
+            </div>
+
+            <!-- Simulated Visual Canvas Frame -->
+            <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 flex flex-col items-center justify-center space-y-3 min-h-[180px] relative overflow-hidden">
+              
+              <!-- Simulated Plate Box -->
+              <div id="simulated-plate-box" class="px-6 py-3 rounded border-2 text-center font-mono transition-all duration-300 bg-slate-900 text-slate-600 border-slate-700 blur-[2px] scale-90">
+                <div class="text-xs font-bold tracking-widest uppercase">KOREA VEHICLE</div>
+                <div id="simulated-plate-text" class="text-2xl font-black tracking-wider">52가 8282</div>
+              </div>
+
+              <!-- Live Indicator Overlay -->
+              <div class="flex items-center gap-4 text-[11px] font-mono text-slate-400">
+                <div>PSNR: <span id="enh-psnr-val" class="text-amber-400 font-bold">22.1 dB</span></div>
+                <div>SSIM: <span id="enh-ssim-val" class="text-amber-400 font-bold">0.68</span></div>
+                <div>OCR 인식 가능 여부: <span id="enh-ocr-status" class="text-red-400 font-bold">불가 (Fail)</span></div>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <span class="font-bold text-slate-800">💡 OCR Perceptual Loss (인지 손실) 훈련 기법:</span>
+              <p class="text-[11px] leading-relaxed">
+                단순히 인간의 눈에 깨끗해 보이는 이미지를 넘어, OCR 신경망(CRNN)의 Feature Loss를 손실 함수에 결합하여 학습시킴으로써 텍스트 모서리와 자음/모음 세부 구조가 왜곡 없이 복원되도록 보장합니다.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 6: 한국형 규격 & Regex 후처리 엔진 -->
+    <!-- ========================================== -->
+    <section id="tab-korean" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <span>🇰🇷</span> 대한민국 차량 번호판 특화 인식률 향상 및 후처리 검증 엔진
+        </h2>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          대한민국 번호판은 8자리(RPA3), 7자리(RPA1/2), 친환경 파란색, 사업용 노란색 등 규격이 다양하며 한글-숫자 불균형이 존재합니다. 딥러닝 출력의 시각적 오류('O'→'0', 'B'→'8')를 정규표현식(Regex)과 위치별 교정 매핑 테이블로 최종 보정합니다.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Interactive Regex Validator Simulator -->
+        <div class="lg:col-span-6 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-900 text-sm border-b border-slate-100 pb-2">
+            🧪 대화형 한국형 번호판 Regex 후처리 검증기
+          </h3>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-700 font-medium mb-1">OCR 원시 예측 텍스트 입력 (오류 포함 가능):</label>
+              <input type="text" id="regexInput" value="123O가4568" oninput="validatePlateRegex()" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-amber-500">
+              <span class="text-[11px] text-slate-400">예: 123O가4568 (숫자 자리에 알파벳 O 오인식)</span>
+            </div>
+
+            <!-- Pre-set Test Cases -->
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <span class="text-slate-500 text-[11px] self-center">테스트 예시:</span>
+              <button onclick="setRegexTest('123O가4568')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded text-[11px] font-mono">123O가4568</button>
+              <button onclick="setRegexTest('12가3456')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded text-[11px] font-mono">12가3456</button>
+              <button onclick="setRegexTest('서울12가3456')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded text-[11px] font-mono">서울12가3456</button>
+              <button onclick="setRegexTest('99B가1234')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded text-[11px] font-mono">99B가1234</button>
+            </div>
+
+            <!-- Validation Result Box -->
+            <div class="bg-slate-900 text-white p-4 rounded-xl space-y-2 font-mono">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">원본 입력:</span>
+                <span id="regex-raw" class="text-slate-200">123O가4568</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">규격 판별:</span>
+                <span id="regex-format" class="text-amber-400 font-bold">신형 8자리 비사업용</span>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400">위치 치환 교정:</span>
+                <span id="regex-corrected" class="text-emerald-400 font-bold text-sm">1230가 4568</span>
+              </div>
+              <div class="border-t border-slate-800 pt-2 flex items-center justify-between text-[11px]">
+                <span class="text-slate-400">검증 상태:</span>
+                <span id="regex-status" class="bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
+                  PASSED (자동 교정 완료)
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: Trajectory Smoothing & Synthetic Data Explanations -->
+        <div class="lg:col-span-6 space-y-4">
+          
+          <!-- Trajectory Chart -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-900 text-sm">비디오 스트림 다수결 보팅(Majority Vote) 인식률 정밀 향상</h3>
+            <div class="chart-container">
+              <canvas id="trajectoryChart"></canvas>
+            </div>
+            <p class="text-[11px] text-slate-500 text-center">
+              * 폐색(Occlusion)이나 프레임 드랍 발생 시 5프레임 시계열 보상 통합을 통해 인식률이 29.9%에서 42.3%로 대폭 반등.
+            </p>
+          </div>
+
+          <!-- Synthetic Data Card -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2 text-xs">
+            <h4 class="font-bold text-slate-900 flex items-center gap-1.5">
+              <span>🎨</span> 한글-숫자 클래스 불균형 GAN 합성 데이터(Synthetic Data) 극복
+            </h4>
+            <p class="text-slate-600 leading-relaxed text-[11px]">
+              번호판 1개당 숫자는 6~7개 포함되나 한글은 단 1개만 출현하여 편향이 발생합니다. GAN 및 렌더링 엔진으로 대량의 한국 규격 가상 데이터셋을 생성하여 희귀 한글 기호 인식 능력을 완벽 보완합니다.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Quick Architecture Modal -->
+  <div id="archModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+          <span>💡</span> ANPR 아키텍처 종합 권고사항 요약
+        </h3>
+        <button onclick="closeArchModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-700 leading-relaxed">
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+          <strong class="text-slate-900 text-xs">1. 추론 런타임 이원화 전략</strong>
+          <p class="text-[11px]">소형 단독 엣지에는 의존성 없는 OpenCV 5 DNN, 고성능 GPU 관제망에는 TensorRT INT8 양자화를 채택하여 처리량 극대화.</p>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+          <strong class="text-slate-900 text-xs">2. 초경량 End-to-End OCR 선정</strong>
+          <p class="text-[11px]">단일 행 번호판은 LPRNet(STN 포함), 다국어/2열 혼재 환경은 6.8MB의 PP-OCRv4 Mobile을 적용하여 오버헤드 최소화.</p>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+          <strong class="text-slate-900 text-xs">3. Real-ESRGAN 초해상화 전처리 결합</strong>
+          <p class="text-[11px]">저조도 및 결손 픽셀 환경에서 Real-ESRGAN 전처리를 구동하여 OCR 인식 정확도를 +25.76% 동반 상승시킴.</p>
+        </div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+          <strong class="text-slate-900 text-xs">4. 한국형 규격 Regex 후처리 오인식 차단</strong>
+          <p class="text-[11px]">위치별 정규표현식 교정 매핑 및 시계열 다수결 보팅을 통해 99%+ 신뢰도를 완성.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeArchModal()" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800">
+          확인 및 닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 text-xs py-4 border-t border-slate-800 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-1">
+      <p>지능형 교통 시스템(ITS) 번호판 인식(ANPR) AI 모델 심층 분석 리포트 대화형 SPA</p>
+      <p class="text-[11px] text-slate-500">© 2026 Edge AI Vision Research Group. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript Logic & Chart Initialization -->
+  <script>
+    // Global Chart Objects
+    let engineChartObj = null;
+    let quantChartObj = null;
+    let ocrChartObj = null;
+    let superResChartObj = null;
+    let trajectoryChartObj = null;
+
+    // Tab Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
+        btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+      });
+
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
+        activeBtn.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
+      }
+
+      // Resize charts on tab display
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    // Modal Handlers
+    function quickArchitectureModal() {
+      const modal = document.getElementById('archModal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+    function closeArchModal() {
+      const modal = document.getElementById('archModal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    // ----------------------------------------------------
+    // Tab 1 Simulator Logic
+    // ----------------------------------------------------
+    function setPipelineScenario(mode) {
+      const btnSunny = document.getElementById('scen-sunny');
+      const btnNight = document.getElementById('scen-night');
+      const btnBlurry = document.getElementById('scen-blurry');
+
+      [btnSunny, btnNight, btnBlurry].forEach(b => {
+        b.className = "px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200";
+      });
+
+      if (mode === 'sunny') {
+        btnSunny.className = "px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold";
+        document.getElementById('sim-step1-time').innerText = "0.2ms";
+        document.getElementById('sim-step2-time').innerText = "0.0ms";
+        document.getElementById('sim-step2-badge').innerText = "Bypass";
+        document.getElementById('sim-step2-badge').className = "text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-semibold text-center";
+        document.getElementById('sim-step3-time').innerText = "3.5ms";
+        document.getElementById('sim-step4-time').innerText = "5.0ms";
+        document.getElementById('sim-step5-time').innerText = "0.6ms";
+
+        document.getElementById('sim-output-plate').innerText = "123가 4568";
+        document.getElementById('sim-output-status').innerText = "정상 인식 (신뢰도 99.4%)";
+        document.getElementById('sim-output-status').className = "bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-semibold";
+        document.getElementById('sim-total-latency').innerText = "9.3 ms";
+        document.getElementById('sim-total-fps').innerText = "107.5 FPS";
+      } else if (mode === 'night') {
+        btnNight.className = "px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold";
+        document.getElementById('sim-step1-time').innerText = "0.2ms";
+        document.getElementById('sim-step2-time').innerText = "1.8ms";
+        document.getElementById('sim-step2-badge').innerText = "CLAHE + Retinex";
+        document.getElementById('sim-step2-badge').className = "text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-mono font-semibold text-center";
+        document.getElementById('sim-step3-time').innerText = "3.5ms";
+        document.getElementById('sim-step4-time').innerText = "5.2ms";
+        document.getElementById('sim-step5-time').innerText = "0.8ms";
+
+        document.getElementById('sim-output-plate').innerText = "77나 1004";
+        document.getElementById('sim-output-status').innerText = "조도 보정 후 성공 (98.1%)";
+        document.getElementById('sim-output-status').className = "bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-semibold";
+        document.getElementById('sim-total-latency').innerText = "11.5 ms";
+        document.getElementById('sim-total-fps').innerText = "86.9 FPS";
+      } else if (mode === 'blurry') {
+        btnBlurry.className = "px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold";
+        document.getElementById('sim-step1-time').innerText = "0.2ms";
+        document.getElementById('sim-step2-time').innerText = "14.5ms";
+        document.getElementById('sim-step2-badge').innerText = "Real-ESRGAN 4x";
+        document.getElementById('sim-step2-badge').className = "text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-mono font-semibold text-center";
+        document.getElementById('sim-step3-time').innerText = "3.5ms";
+        document.getElementById('sim-step4-time').innerText = "5.5ms";
+        document.getElementById('sim-step5-time').innerText = "1.1ms";
+
+        document.getElementById('sim-output-plate').innerText = "380러 9281";
+        document.getElementById('sim-output-status').innerText = "초해상화 복원 성공 (96.8%)";
+        document.getElementById('sim-output-status').className = "bg-emerald-950 text-emerald-400 px-2 py-1 rounded border border-emerald-800 font-semibold";
+        document.getElementById('sim-total-latency').innerText = "24.8 ms";
+        document.getElementById('sim-total-fps').innerText = "40.3 FPS";
+      }
+    }
+
+    // ----------------------------------------------------
+    // Tab 3 Quantization Chart Dynamic Switcher
+    // ----------------------------------------------------
+    function updateQuantChart(type) {
+      document.getElementById('btn-quant-fps').className = "px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200";
+      document.getElementById('btn-quant-latency').className = "px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200";
+      document.getElementById('btn-quant-vram').className = "px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200";
+
+      document.getElementById('btn-quant-' + type).className = "px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold";
+
+      if (type === 'fps') {
+        quantChartObj.data.datasets[0].data = [30, 50, 63];
+        quantChartObj.data.datasets[1].data = [28, 48, 65];
+        quantChartObj.options.scales.y.title.text = '초당 프레임 수 (FPS)';
+      } else if (type === 'latency') {
+        quantChartObj.data.datasets[0].data = [21.9, 7.3, 3.49];
+        quantChartObj.data.datasets[1].data = [22.5, 7.8, 3.61];
+        quantChartObj.options.scales.y.title.text = '지연 시간 (ms)';
+      } else if (type === 'vram') {
+        quantChartObj.data.datasets[0].data = [2.1, 1.2, 0.8];
+        quantChartObj.data.datasets[1].data = [2.3, 1.3, 0.85];
+        quantChartObj.options.scales.y.title.text = 'VRAM 메모리 (GB)';
+      }
+      quantChartObj.update();
+    }
+
+    // ----------------------------------------------------
+    // Tab 5 Image Enhancement Interactive Simulator
+    // ----------------------------------------------------
+    function setEnhanceMode(mode) {
+      const btnRaw = document.getElementById('btn-enh-raw');
+      const btnClahe = document.getElementById('btn-enh-clahe');
+      const btnSr = document.getElementById('btn-enh-sr');
+
+      [btnRaw, btnClahe, btnSr].forEach(b => b.className = "px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px]");
+
+      const plateBox = document.getElementById('simulated-plate-box');
+      const psnrVal = document.getElementById('enh-psnr-val');
+      const ssimVal = document.getElementById('enh-ssim-val');
+      const ocrStatus = document.getElementById('enh-ocr-status');
+
+      if (mode === 'raw') {
+        btnRaw.className = "px-2 py-1 bg-amber-500 text-slate-950 font-bold rounded text-[11px]";
+        plateBox.className = "px-6 py-3 rounded border-2 text-center font-mono transition-all duration-300 bg-slate-900 text-slate-600 border-slate-700 blur-[2px] scale-90";
+        psnrVal.innerText = "22.1 dB";
+        ssimVal.innerText = "0.68";
+        ocrStatus.innerText = "불가 (Fail)";
+        ocrStatus.className = "text-red-400 font-bold";
+      } else if (mode === 'clahe') {
+        btnClahe.className = "px-2 py-1 bg-amber-500 text-slate-950 font-bold rounded text-[11px]";
+        plateBox.className = "px-6 py-3 rounded border-2 text-center font-mono transition-all duration-300 bg-slate-900 text-amber-300 border-amber-500/50 blur-[0.5px] scale-95";
+        psnrVal.innerText = "24.5 dB";
+        ssimVal.innerText = "0.74";
+        ocrStatus.innerText = "부분 성공 (72%)";
+        ocrStatus.className = "text-amber-400 font-bold";
+      } else if (mode === 'sr') {
+        btnSr.className = "px-2 py-1 bg-amber-500 text-slate-950 font-bold rounded text-[11px]";
+        plateBox.className = "px-6 py-3 rounded border-2 text-center font-mono transition-all duration-300 bg-slate-950 text-emerald-400 border-emerald-500 shadow-lg scale-100";
+        psnrVal.innerText = "26.31 dB (+4.21dB)";
+        ssimVal.innerText = "0.80 (+0.12)";
+        ocrStatus.innerText = "완벽 복원 (98.8%)";
+        ocrStatus.className = "text-emerald-400 font-bold";
+      }
+    }
+
+    // ----------------------------------------------------
+    // Tab 6 Korean Plate Regex Validator Logic
+    // ----------------------------------------------------
+    function setRegexTest(str) {
+      document.getElementById('regexInput').value = str;
+      validatePlateRegex();
+    }
+
+    function validatePlateRegex() {
+      const input = document.getElementById('regexInput').value.trim();
+      const rawSpan = document.getElementById('regex-raw');
+      const formatSpan = document.getElementById('regex-format');
+      const correctedSpan = document.getElementById('regex-corrected');
+      const statusSpan = document.getElementById('regex-status');
+
+      rawSpan.innerText = input || "(빈 값)";
+
+      if (!input) {
+        formatSpan.innerText = "-";
+        correctedSpan.innerText = "-";
+        statusSpan.innerText = "대기중";
+        statusSpan.className = "bg-slate-800 text-slate-400 px-2 py-0.5 rounded";
+        return;
+      }
+
+      // Korean Plate Pattern Matching
+      // Pattern 1: 8-digit (123가4568)
+      const pattern8 = /^(\d{2,3})([O0-9])([가-힣])(\d{4})$/;
+      // Pattern 2: 7-digit (12가3456)
+      const pattern7 = /^(\d{2})([가-힣])(\d{4})$/;
+      // Pattern 3: Regional (서울12가3456)
+      const patternRegion = /^([가-힣]{2})(\d{2})([가-힣])(\d{4})$/;
+
+      let corrected = input;
+      let matchedFormat = "알 수 없는 규격";
+      let isValid = false;
+
+      // Check O -> 0 misrecognition
+      if (pattern8.test(input)) {
+        matchedFormat = "신형 8자리 비사업용 (RPA3)";
+        const match = input.match(pattern8);
+        let numPart1 = match[1];
+        let possO = match[2];
+        let hangul = match[3];
+        let numPart2 = match[4];
+
+        if (possO === 'O') possO = '0';
+        corrected = `${numPart1}${possO}${hangul} ${numPart2}`;
+        isValid = true;
+      } else if (input.includes('O') || input.includes('B')) {
+        // Auto-fix misrecognitions
+        let temp = input.replace(/O/g, '0').replace(/B/g, '8');
+        if (pattern8.test(temp)) {
+          matchedFormat = "신형 8자리 (휴리스틱 교정 적용)";
+          const match = temp.match(pattern8);
+          corrected = `${match[1]}${match[2]}${match[3]} ${match[4]}`;
+          isValid = true;
+        }
+      }
+
+      if (!isValid && pattern7.test(input)) {
+        matchedFormat = "구형 7자리 일반 (RPA1/2)";
+        const match = input.match(pattern7);
+        corrected = `${match[1]}${match[2]} ${match[3]}`;
+        isValid = true;
+      }
+
+      if (!isValid && patternRegion.test(input)) {
+        matchedFormat = "지역명이 포함된 영업용/특수 번호판";
+        const match = input.match(patternRegion);
+        corrected = `${match[1]} ${match[2]}${match[3]} ${match[4]}`;
+        isValid = true;
+      }
+
+      if (isValid) {
+        formatSpan.innerText = matchedFormat;
+        correctedSpan.innerText = corrected;
+        statusSpan.innerText = "PASSED (자동 교정 및 규격 일치)";
+        statusSpan.className = "bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800";
+      } else {
+        formatSpan.innerText = "규격 불일치";
+        correctedSpan.innerText = input;
+        statusSpan.innerText = "WARNING (정규표현식 검증 실패)";
+        statusSpan.className = "bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-800";
+      }
+    }
+
+    // ----------------------------------------------------
+    // Chart.js Visualizations Setup
+    // ----------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+
+      // Chart 1: Engine Comparison Chart
+      const ctxEngine = document.getElementById('engineComparisonChart').getContext('2d');
+      engineChartObj = new Chart(ctxEngine, {
+        type: 'bar',
+        data: {
+          labels: ['Raspberry Pi 5 (CPU)', 'ARM Cortex-A53 (CPU)', 'Jetson Orin NX (GPU CUDA)'],
+          datasets: [
+            {
+              label: 'OpenCV 5 DNN (ms)',
+              data: [13.6, 45.2, 8.5],
+              backgroundColor: '#f59e0b',
+              borderRadius: 6
+            },
+            {
+              label: 'ONNX Runtime / TensorRT (ms)',
+              data: [30.7, 88.0, 3.49],
+              backgroundColor: '#4f46e5',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y + ' ms';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: '지연 시간 Latency (ms - 낮을수록 우수)' }
+            }
+          }
+        }
+      });
+
+      // Chart 2: Quantization Performance Chart
+      const ctxQuant = document.getElementById('quantizationChart').getContext('2d');
+      quantChartObj = new Chart(ctxQuant, {
+        type: 'bar',
+        data: {
+          labels: ['FP32 (PyTorch)', 'FP16 (TensorRT)', 'INT8 (TensorRT)'],
+          datasets: [
+            {
+              label: 'YOLOv8 Nano',
+              data: [30, 50, 63],
+              backgroundColor: '#059669',
+              borderRadius: 6
+            },
+            {
+              label: 'YOLOv8 Small',
+              data: [28, 48, 65],
+              backgroundColor: '#d97706',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: '초당 프레임 수 (FPS)' }
+            }
+          }
+        }
+      });
+
+      // Chart 3: OCR Comparison Chart
+      const ctxOcr = document.getElementById('ocrComparisonChart').getContext('2d');
+      ocrChartObj = new Chart(ctxOcr, {
+        type: 'radar',
+        data: {
+          labels: ['추론 속도', '기울임 강건성 (STN)', '경량성 (파일 크기)', '다국어 확장성', '라인 정확도'],
+          datasets: [
+            {
+              label: 'LPRNet',
+              data: [95, 96, 98, 40, 85],
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.2)',
+              borderWidth: 2
+            },
+            {
+              label: 'PP-OCRv4 Mobile',
+              data: [80, 85, 90, 95, 92],
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.2)',
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { display: true },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          }
+        }
+      });
+
+      // Chart 4: Super Resolution Chart
+      const ctxSR = document.getElementById('superResChart').getContext('2d');
+      superResChartObj = new Chart(ctxSR, {
+        type: 'bar',
+        data: {
+          labels: ['PSNR (dB)', 'SSIM (x100)', 'YOLO mAP@0.5 (%)', 'OCR 정확도 (%)'],
+          datasets: [
+            {
+              label: '적용 전 (열화 이미지)',
+              data: [22.1, 68, 62.1, 65.4],
+              backgroundColor: '#94a3b8',
+              borderRadius: 6
+            },
+            {
+              label: 'Real-ESRGAN 적용 후',
+              data: [26.31, 80, 85.36, 91.16],
+              backgroundColor: '#059669',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // Chart 5: Trajectory Smoothing Chart
+      const ctxTraj = document.getElementById('trajectoryChart').getContext('2d');
+      trajectoryChartObj = new Chart(ctxTraj, {
+        type: 'line',
+        data: {
+          labels: ['단일 프레임 (1F)', '2프레임 시계열', '3프레임 연관', '4프레임 보정', '5프레임 다수결 통합'],
+          datasets: [{
+            label: '문자 인식 정확도 (%)',
+            data: [29.9, 34.2, 38.0, 40.5, 42.3],
+            borderColor: '#d97706',
+            backgroundColor: 'rgba(217, 119, 6, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#d97706'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              suggestedMin: 20,
+              suggestedMax: 50,
+              title: { display: true, text: '성능 반등 (%)' }
+            }
+          }
+        }
+      });
+
+      // Initialize Regex Validator Default State
+      validatePlateRegex();
+
+    });
+  </script>
+</body>
+</html>

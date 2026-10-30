@@ -82,6 +82,7 @@ export const BulkImageProcessor: React.FC<BulkImageProcessorProps> = ({
   const [processedImages, setProcessedImages] = useState<ProcessedDatasetImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processProgress, setProcessProgress] = useState(0);
+  const [currentProcessingName, setCurrentProcessingName] = useState<string>('');
   const [exportProgress, setExportProgress] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [datasetName, setDatasetName] = useState(() => `ALPR_Dataset_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`);
@@ -179,6 +180,10 @@ export const BulkImageProcessor: React.FC<BulkImageProcessorProps> = ({
 
     for (let i = 0; i < rawFiles.length; i++) {
       const raw = rawFiles[i];
+      setCurrentProcessingName(raw.filename);
+      // Simulated processing delay per image
+      await new Promise((r) => setTimeout(r, 220));
+
       try {
         // 1. Apply active AugmentationParams using Canvas
         const augmentedUrl = await applyAugmentationToCanvas(raw.previewUrl, currentParams);
@@ -582,6 +587,29 @@ export const BulkImageProcessor: React.FC<BulkImageProcessorProps> = ({
                     </>
                   )}
                 </button>
+
+                {/* Real-time Processing Progress Bar & Status Indicator */}
+                {isProcessing && (
+                  <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 text-white space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="flex items-center gap-1.5 text-sky-400">
+                        <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+                        <span>생성 중: <strong className="text-white truncate max-w-[150px] inline-block align-bottom">{currentProcessingName}</strong></span>
+                      </span>
+                      <span className="font-bold text-emerald-400">{processProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                      <div
+                        className="h-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 transition-all duration-200"
+                        style={{ width: `${processProgress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                      <span>상태: 캔버스 광학 왜곡 주입 및 OCR 지연 시뮬레이션 중</span>
+                      <span className="text-sky-300">지연: ~220ms/장</span>
+                    </div>
+                  </div>
+                )}
 
                 {processedImages.length > 0 && (
                   <div className="flex gap-2">

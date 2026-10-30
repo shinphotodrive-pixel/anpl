@@ -112,8 +112,8 @@ export const PresetLibrarySection: React.FC<PresetLibrarySectionProps> = ({
           </p>
         </div>
 
-        {/* 5 Core Standard Presets Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {/* Core Standard Presets Grid: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
           {corePresets.map((profile) => {
             const impact = getImpactBadge(profile.id);
             const isApplied = appliedId === profile.id;
