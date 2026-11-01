@@ -18,6 +18,7 @@ import {
   Calculator,
   Coins,
   CheckSquare,
+  Camera,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -118,6 +119,17 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400',
     badge: '광학 분석',
     stats: 'IR 850nm 동기화'
+  },
+  {
+    id: 'camera',
+    title: '카메라 광학 & 센서 분석 플랫폼',
+    subTitle: 'MiriCam Opto-Sensor Lab',
+    description: '글로벌 셔터 vs 롤링 셔터 왜곡 제어, 쿼드 픽셀 AF, 적층형 BSI, DCG 및 30+개 광학 센서 전문 용어 심층 분석.',
+    icon: Camera,
+    category: 'vision',
+    color: 'from-blue-500/20 to-cyan-500/10 border-blue-500/40 text-blue-400',
+    badge: '광학·센서 분석',
+    stats: '30+ 전문 용어 & 차트'
   },
   {
     id: 'simulator',
@@ -243,6 +255,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         onScrollToTraining={() => onNavigate('training')}
         onScrollToModels={() => onNavigate('models')}
         onScrollToLighting={() => onNavigate('lighting')}
+        onScrollToCamera={() => onNavigate('camera')}
         onScrollToSimulator={() => onNavigate('simulator')}
         onScrollToBatch={() => onNavigate('batch')}
         onScrollToPresets={() => onNavigate('presets')}
@@ -258,14 +271,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <span>ALPR Complete Suite Directory</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            ALPR 17대 핵심 모듈 전체 둘러보기
+            ALPR 18대 핵심 모듈 전체 둘러보기
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             원하시는 메뉴 탭을 선택하시면 스크롤 없이 해당 페이지로 독립 전환되어 상세 연구 자료 및 인터랙티브 툴을 사용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Grid of 17 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        {/* Grid of 18 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MODULE_CARDS.map((item) => {
             const Icon = item.icon;

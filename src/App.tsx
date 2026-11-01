@@ -13,6 +13,7 @@ import { LprResearchDashboard } from './components/LprResearch/LprResearchDashbo
 import { PlateTrainingSection } from './components/Training/PlateTrainingSection';
 import { ModelShowcaseSection } from './components/Model/ModelShowcaseSection';
 import { LightingDashboardSection } from './components/Lighting/LightingDashboardSection';
+import { CameraTechSection } from './components/Camera/CameraTechSection';
 import { SimulatorView } from './components/Simulator/SimulatorView';
 import { BatchProcessorSection } from './components/BatchProcessor/BatchProcessorSection';
 import { DataValidatorSection } from './components/DataValidator/DataValidatorSection';
@@ -88,6 +89,9 @@ export default function App() {
 
       case 'lighting':
         return <LightingDashboardSection />;
+
+      case 'camera':
+        return <CameraTechSection />;
 
       case 'simulator':
         return <SimulatorView sharedParams={params} setSharedParams={setParams} />;
@@ -214,7 +218,7 @@ export default function App() {
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 transition-all hover:scale-[1.01]"
               >
                 <Layers className="w-4 h-4 text-sky-500" />
-                <span>전체 17대 모듈 홈으로</span>
+                <span>전체 18대 모듈 홈으로</span>
               </button>
 
               {nextTab ? (

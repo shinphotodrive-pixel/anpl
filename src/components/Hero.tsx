@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Camera, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain } from 'lucide-react';
 
 interface HeroProps {
   onScrollToDetector?: () => void;
@@ -9,6 +9,7 @@ interface HeroProps {
   onScrollToTraining?: () => void;
   onScrollToModels?: () => void;
   onScrollToLighting?: () => void;
+  onScrollToCamera?: () => void;
   onScrollToSimulator: () => void;
   onScrollToBatch?: () => void;
   onScrollToPresets?: () => void;
@@ -24,6 +25,7 @@ export const Hero: React.FC<HeroProps> = ({
   onScrollToTraining,
   onScrollToModels,
   onScrollToLighting,
+  onScrollToCamera,
   onScrollToSimulator, 
   onScrollToBatch,
   onScrollToPresets,
@@ -158,6 +160,16 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <Lightbulb className="w-4 h-4 text-slate-950" />
               <span>조명 기술 분석</span>
+            </button>
+          )}
+
+          {onScrollToCamera && (
+            <button
+              onClick={onScrollToCamera}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Camera className="w-4 h-4 text-white" />
+              <span>카메라 광학 플랫폼</span>
             </button>
           )}
 
