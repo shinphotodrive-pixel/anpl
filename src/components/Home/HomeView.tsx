@@ -21,6 +21,7 @@ import {
   Camera,
   Maximize,
   SlidersHorizontal,
+  Radio,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -143,6 +144,17 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400',
     badge: '글로벌셔터 6종',
     stats: '6종 스펙 & NDAA 감사'
+  },
+  {
+    id: 'see3cam-24cug',
+    title: 'See3CAM_24CUG 심층 분석 랩',
+    subTitle: 'e-con Systems AR0234CS USB 3.1 Global Shutter Lab',
+    description: 'onsemi AR0234CS 2.3MP 글로벌 셔터, 120 FPS, 온보드 ISP, 24GHz 레이더 펄스 동기화 인터페이스, 실시간 번호판 가상 뷰어 및 V4L2 명령 생성기.',
+    icon: Radio,
+    category: 'vision',
+    color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-300',
+    badge: 'AR0234 플래그십',
+    stats: '120 FPS & 하드웨어 ISP'
   },
   {
     id: 'pixel',
@@ -281,6 +293,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         onScrollToLighting={() => onNavigate('lighting')}
         onScrollToCamera={() => onNavigate('camera')}
         onScrollToCameraSix={() => onNavigate('camera-6')}
+        onScrollToSee3Cam={() => onNavigate('see3cam-24cug')}
         onScrollToPixel={() => onNavigate('pixel')}
         onScrollToSimulator={() => onNavigate('simulator')}
         onScrollToBatch={() => onNavigate('batch')}
@@ -297,14 +310,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <span>ALPR Complete Suite Directory</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            ALPR 20대 핵심 모듈 전체 둘러보기
+            ALPR 21대 핵심 모듈 전체 둘러보기
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             원하시는 메뉴 탭을 선택하시면 스크롤 없이 해당 페이지로 독립 전환되어 상세 연구 자료 및 인터랙티브 툴을 사용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Grid of 20 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        {/* Grid of 21 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MODULE_CARDS.map((item) => {
             const Icon = item.icon;

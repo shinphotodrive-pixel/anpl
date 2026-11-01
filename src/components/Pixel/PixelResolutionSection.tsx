@@ -299,6 +299,7 @@ export const PixelResolutionSection: React.FC = () => {
   const [selectedResId, setSelectedResId] = useState<string>('fhd');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [canvasMode, setCanvasMode] = useState<'nested' | 'grid'>('nested');
   
   // Interactive ALPR Calculator State
   const [calcResolutionId, setCalcResolutionId] = useState<string>('fhd');
@@ -431,126 +432,192 @@ export const PixelResolutionSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick interactive selector buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-400 font-medium mr-1">규격 선택:</span>
-              {[
-                { id: 'hd', label: 'HD (100만)', border: 'border-emerald-500/50 text-emerald-400' },
-                { id: 'fhd', label: 'FHD / 2M (200만)', border: 'border-blue-500/50 text-blue-400' },
-                { id: '5m', label: '5M (500만)', border: 'border-purple-500/50 text-purple-400' },
-                { id: '4k_uhd', label: '4K / 8M (800만)', border: 'border-indigo-500/50 text-indigo-400' }
-              ].map((btn) => (
+            {/* View Mode & Quick Selector */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700/80">
                 <button
-                  key={btn.id}
-                  onClick={() => setSelectedResId(btn.id)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${
-                    selectedResId === btn.id
-                      ? 'bg-white text-slate-900 font-bold shadow-md scale-105'
-                      : `bg-slate-800/80 hover:bg-slate-700 ${btn.border}`
+                  onClick={() => setCanvasMode('nested')}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    canvasMode === 'nested'
+                      ? 'bg-sky-500 text-slate-950 shadow-sm font-bold'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {btn.label}
+                  중첩 면적 비교
                 </button>
-              ))}
+                <button
+                  onClick={() => setCanvasMode('grid')}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    canvasMode === 'grid'
+                      ? 'bg-sky-500 text-slate-950 shadow-sm font-bold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  나란히 카드 비교
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'hd', label: 'HD (100만)', border: 'border-emerald-500/50 text-emerald-400' },
+                  { id: 'fhd', label: 'FHD / 2M (200만)', border: 'border-blue-500/50 text-blue-400' },
+                  { id: '5m', label: '5M (500만)', border: 'border-purple-500/50 text-purple-400' },
+                  { id: '4k_uhd', label: '4K / 8M (800만)', border: 'border-indigo-500/50 text-indigo-400' }
+                ].map((btn) => (
+                  <button
+                    key={btn.id}
+                    onClick={() => setSelectedResId(btn.id)}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                      selectedResId === btn.id
+                        ? 'bg-white text-slate-900 font-bold shadow-md scale-105'
+                        : `bg-slate-800/80 hover:bg-slate-700 ${btn.border}`
+                    }`}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           
-          {/* Nested Comparative Canvas Box */}
-          <div className="relative w-full aspect-video min-h-[380px] sm:min-h-[420px] bg-slate-950 rounded-2xl border-2 border-slate-700/90 overflow-hidden shadow-inner">
-            
-            {/* 4K Box (8M) - 100% width, 100% height */}
-            <div
-              onClick={() => setSelectedResId('4k_uhd')}
-              className={`absolute inset-0 bg-indigo-500/15 border-t-2 border-r-2 border-indigo-500 transition-all duration-300 cursor-pointer ${
-                selectedResId === '4k_uhd' ? 'ring-4 ring-indigo-400/40 bg-indigo-500/30' : 'hover:bg-indigo-500/25'
-              }`}
-            >
-              {/* 4K Label Card placed in TOP-RIGHT corner - 100% separated from 5M/FHD/HD on the left */}
-              <div className="absolute top-3 right-3 max-w-[240px] sm:max-w-xs bg-slate-900/95 backdrop-blur-md border border-indigo-500/60 rounded-xl p-2.5 sm:p-3 shadow-xl pointer-events-none z-20">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-indigo-400 font-bold text-sm sm:text-base tracking-tight">4K UHD (8M)</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-950/90 text-indigo-300 border border-indigo-700/80">100% 기준</span>
+          {/* Comparative Visualization Display */}
+          {canvasMode === 'nested' ? (
+            /* Nested Comparative Canvas Box */
+            <div className="relative w-full aspect-video min-h-[400px] sm:min-h-[440px] bg-slate-950 rounded-2xl border-2 border-slate-700/90 overflow-hidden shadow-inner">
+              
+              {/* 4K Box (8M) - 100% width, 100% height */}
+              <div
+                onClick={() => setSelectedResId('4k_uhd')}
+                className={`absolute inset-0 bg-indigo-500/15 border-t-2 border-r-2 border-indigo-500 transition-all duration-300 cursor-pointer ${
+                  selectedResId === '4k_uhd' ? 'ring-4 ring-indigo-400/40 bg-indigo-500/30' : 'hover:bg-indigo-500/25'
+                }`}
+              >
+                {/* 4K Label Card placed in TOP-RIGHT corner - completely separated from left-aligned 5M/FHD/HD */}
+                <div className="absolute top-4 right-4 max-w-[210px] sm:max-w-[260px] bg-slate-900/95 backdrop-blur-md border border-indigo-500/70 rounded-xl p-2.5 sm:p-3 shadow-2xl pointer-events-none z-20">
+                  <div className="flex items-center justify-between gap-1.5 mb-1">
+                    <span className="text-indigo-400 font-bold text-xs sm:text-sm tracking-tight">4K UHD (8M)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-950/90 text-indigo-300 border border-indigo-700/80">100% 기준</span>
+                  </div>
+                  <div className="text-indigo-200/95 text-[11px] sm:text-xs font-mono">3840 x 2160 / 829만 화소</div>
+                  <div className="text-indigo-300/75 text-[10px] mt-1 hidden sm:block">3차로(10.5m) 동시 고화질 광역 감시</div>
                 </div>
-                <div className="text-indigo-200/90 text-[11px] sm:text-xs font-mono mt-0.5">3840 x 2160 / 829만 화소 (16:9)</div>
-                <div className="text-indigo-300/70 text-[10px] mt-0.5 hidden sm:block">3차로(10.5m) 동시 고화질 광역 감시</div>
               </div>
-            </div>
-            
-            {/* 5M Box - 63.7% width, 94.8% height */}
-            <div
-              onClick={() => setSelectedResId('5m')}
-              className={`absolute bottom-0 left-0 w-[64%] h-[95%] bg-purple-500/20 border-t-2 border-r-2 border-purple-500 transition-all duration-300 cursor-pointer z-10 hidden sm:block ${
-                selectedResId === '5m' ? 'ring-4 ring-purple-400/40 bg-purple-500/35' : 'hover:bg-purple-500/30'
-              }`}
-            >
-              {/* 5M Dimension badge on top border */}
-              <div className="absolute -top-3.5 right-2 px-1.5 py-0.5 rounded bg-purple-950 border border-purple-500/60 text-[10px] font-mono text-purple-300 shadow">
-                2448 x 2048 (5M)
-              </div>
-
-              {/* 5M Label Card placed in TOP-LEFT of 5M box */}
-              <div className="absolute top-3 left-3 max-w-[220px] sm:max-w-[250px] bg-slate-900/95 backdrop-blur-md border border-purple-500/60 rounded-xl p-2.5 sm:p-3 shadow-xl pointer-events-none z-20">
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="text-purple-400 font-bold text-xs sm:text-sm tracking-tight">5M (머신비전)</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950/90 text-purple-300 border border-purple-700/80">1.2:1</span>
+              
+              {/* 5M Box - 64% width, 95% height */}
+              <div
+                onClick={() => setSelectedResId('5m')}
+                className={`absolute bottom-0 left-0 w-[64%] h-[95%] bg-purple-500/20 border-t-2 border-r-2 border-purple-500 transition-all duration-300 cursor-pointer z-10 hidden sm:block ${
+                  selectedResId === '5m' ? 'ring-4 ring-purple-400/40 bg-purple-500/35' : 'hover:bg-purple-500/30'
+                }`}
+              >
+                {/* 5M Label Card placed in TOP-LEFT of 5M box */}
+                <div className="absolute top-4 left-4 max-w-[210px] sm:max-w-[250px] bg-slate-900/95 backdrop-blur-md border border-purple-500/70 rounded-xl p-2.5 sm:p-3 shadow-2xl pointer-events-none z-20">
+                  <div className="flex items-center justify-between gap-1.5 mb-1">
+                    <span className="text-purple-400 font-bold text-xs sm:text-sm tracking-tight">5M (머신비전)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950/90 text-purple-300 border border-purple-700/80">1.2:1</span>
+                  </div>
+                  <div className="text-purple-200/95 text-[11px] sm:text-xs font-mono">2448 x 2048 / 501만 화소</div>
+                  <div className="text-purple-300/75 text-[10px] mt-1 hidden sm:block">고속도로 2차로 단속 표준 (IMX264)</div>
                 </div>
-                <div className="text-purple-200/90 text-[10px] sm:text-xs font-mono mt-0.5">2448 x 2048 / 501만 화소</div>
-                <div className="text-purple-300/70 text-[10px] mt-0.5 hidden sm:block">고속도로 2차로 동시 단속 표준 (IMX264)</div>
-              </div>
-            </div>
-
-            {/* 2M / FHD Box - 50% width, 50% height */}
-            <div
-              onClick={() => setSelectedResId('fhd')}
-              className={`absolute bottom-0 left-0 w-[50%] h-[50%] bg-blue-500/25 border-t-2 border-r-2 border-blue-500 transition-all duration-300 cursor-pointer z-20 ${
-                selectedResId === 'fhd' ? 'ring-4 ring-blue-400/40 bg-blue-500/40' : 'hover:bg-blue-500/35'
-              }`}
-            >
-              {/* FHD Dimension badge on top border */}
-              <div className="absolute -top-3.5 right-2 px-1.5 py-0.5 rounded bg-blue-950 border border-blue-500/60 text-[10px] font-mono text-blue-300 shadow">
-                1920 x 1080 (FHD)
               </div>
 
-              {/* FHD Label Card placed in TOP-LEFT of FHD box (middle vertical tier) */}
-              <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 max-w-[190px] sm:max-w-[220px] bg-slate-900/95 backdrop-blur-md border border-blue-500/60 rounded-xl p-2 sm:p-2.5 shadow-xl pointer-events-none z-20">
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="text-blue-400 font-bold text-xs sm:text-sm tracking-tight">FHD (2M)</span>
-                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-blue-950/90 text-blue-300 border border-blue-700/80">업계 표준</span>
+              {/* 2M / FHD Box - 50% width, 50% height */}
+              <div
+                onClick={() => setSelectedResId('fhd')}
+                className={`absolute bottom-0 left-0 w-[50%] h-[50%] bg-blue-500/25 border-t-2 border-r-2 border-blue-500 transition-all duration-300 cursor-pointer z-20 ${
+                  selectedResId === 'fhd' ? 'ring-4 ring-blue-400/40 bg-blue-500/40' : 'hover:bg-blue-500/35'
+                }`}
+              >
+                {/* FHD Label Card placed in TOP-LEFT of FHD box (middle vertical tier) */}
+                <div className="absolute top-3 left-3 sm:top-4 sm:left-4 max-w-[190px] sm:max-w-[220px] bg-slate-900/95 backdrop-blur-md border border-blue-500/70 rounded-xl p-2 sm:p-2.5 shadow-2xl pointer-events-none z-20">
+                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
+                    <span className="text-blue-400 font-bold text-xs sm:text-sm tracking-tight">FHD (2M)</span>
+                    <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-blue-950/90 text-blue-300 border border-blue-700/80">업계 표준</span>
+                  </div>
+                  <div className="text-blue-200/95 text-[10px] sm:text-[11px] font-mono">1920 x 1080 / 207만 화소</div>
+                  <div className="text-blue-300/75 text-[9px] mt-0.5 hidden md:block">1~2차로 주차 관제 / 글로벌 셔터</div>
                 </div>
-                <div className="text-blue-200/90 text-[10px] sm:text-[11px] font-mono mt-0.5">1920 x 1080 / 207만 화소</div>
-                <div className="text-blue-300/70 text-[9px] mt-0.5 hidden md:block">1~2차로 주차 관제 / 글로벌 셔터</div>
-              </div>
-            </div>
-
-            {/* HD Box - 33.3% width, 33.3% height */}
-            <div
-              onClick={() => setSelectedResId('hd')}
-              className={`absolute bottom-0 left-0 w-[33.3%] h-[33.3%] bg-emerald-500/30 border-t-2 border-r-2 border-emerald-400 transition-all duration-300 cursor-pointer z-30 ${
-                selectedResId === 'hd' ? 'ring-4 ring-emerald-400/50 bg-emerald-500/50' : 'hover:bg-emerald-500/45'
-              }`}
-            >
-              {/* HD Dimension badge on top border */}
-              <div className="absolute -top-3.5 right-1.5 px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/60 text-[10px] font-mono text-emerald-300 shadow">
-                1280 x 720 (HD)
               </div>
 
-              {/* HD Label Card placed in BOTTOM-LEFT of HD box */}
-              <div className="absolute bottom-2 left-2 sm:bottom-2.5 sm:left-2.5 max-w-[150px] sm:max-w-[170px] bg-slate-900/95 backdrop-blur-md border border-emerald-500/60 rounded-xl p-1.5 sm:p-2 shadow-xl pointer-events-none z-30">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-emerald-300 font-bold text-xs sm:text-sm tracking-tight">HD</span>
-                  <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-700/80">100만</span>
+              {/* HD Box - 33.3% width, 33.3% height */}
+              <div
+                onClick={() => setSelectedResId('hd')}
+                className={`absolute bottom-0 left-0 w-[33.3%] h-[33.3%] bg-emerald-500/30 border-t-2 border-r-2 border-emerald-400 transition-all duration-300 cursor-pointer z-30 ${
+                  selectedResId === 'hd' ? 'ring-4 ring-emerald-400/50 bg-emerald-500/50' : 'hover:bg-emerald-500/45'
+                }`}
+              >
+                {/* HD Label Card placed in BOTTOM-LEFT of HD box */}
+                <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 max-w-[150px] sm:max-w-[180px] bg-slate-900/95 backdrop-blur-md border border-emerald-500/70 rounded-xl p-1.5 sm:p-2 shadow-2xl pointer-events-none z-30">
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <span className="text-emerald-300 font-bold text-xs sm:text-sm tracking-tight">HD (720p)</span>
+                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-700/80">100만</span>
+                  </div>
+                  <div className="text-emerald-200/95 text-[9px] sm:text-[10px] font-mono">1280 x 720 (16:9)</div>
                 </div>
-                <div className="text-emerald-200/90 text-[9px] sm:text-[10px] font-mono mt-0.5">1280 x 720 (16:9)</div>
+              </div>
+
+              {/* Visual scale guide label in bottom-right */}
+              <div className="absolute bottom-3 right-3 z-40 bg-slate-900/95 border border-slate-700/90 px-3 py-1.5 rounded-xl text-[11px] text-slate-300 backdrop-blur-md flex items-center gap-1.5 shadow-lg pointer-events-none">
+                <Eye className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden sm:inline">박스 영역을 클릭하면 하단 상세 제원이 즉시 전환됩니다</span>
+                <span className="sm:hidden">박스 클릭 시 상세 전환</span>
               </div>
             </div>
+          ) : (
+            /* Side-by-Side Comparison Grid (Zero overlap alternative view) */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { id: 'hd', name: 'HD (720p)', res: '1280 x 720', mp: '0.92M (100만)', ratio: '16:9', pct: 11, color: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300', ppm1: '190 px', desc: '소형 단일 차로 주차장 전용' },
+                { id: 'fhd', name: 'FHD / 2M (1080p)', res: '1920 x 1080', mp: '2.07M (200만)', ratio: '16:9', pct: 25, color: 'border-blue-500/60 bg-blue-500/10 text-blue-300', ppm1: '285 px', desc: '국내 ITS 및 건물 관제 표준' },
+                { id: '5m', name: '5M Machine Vision', res: '2448 x 2048', mp: '5.01M (500만)', ratio: '1.2:1', pct: 60, color: 'border-purple-500/60 bg-purple-500/10 text-purple-300', ppm1: '363 px', desc: '고속도로 2차로 동시 단속 표준' },
+                { id: '4k_uhd', name: '4K UHD (2160p)', res: '3840 x 2160', mp: '8.29M (800만)', ratio: '16:9', pct: 100, color: 'border-indigo-500/60 bg-indigo-500/10 text-indigo-300', ppm1: '570 px', desc: '3차로 동시 광역 감시 & 교차로' }
+              ].map((card) => {
+                const isSelected = selectedResId === card.id;
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => setSelectedResId(card.id)}
+                    className={`p-5 rounded-2xl border-2 transition-all cursor-pointer ${
+                      isSelected
+                        ? `${card.color} ring-4 ring-sky-400/30 scale-[1.02] shadow-xl`
+                        : 'bg-slate-900/80 border-slate-700/80 hover:border-slate-600 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-white text-base">{card.name}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        {card.ratio}
+                      </span>
+                    </div>
+                    <div className="text-sky-400 font-mono text-sm font-semibold">{card.res}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{card.mp}</div>
 
-            {/* Visual scale guide label in bottom-right (away from all boxes) */}
-            <div className="absolute bottom-3 right-3 z-40 bg-slate-900/95 border border-slate-700/90 px-3 py-1.5 rounded-xl text-[11px] text-slate-300 backdrop-blur-md flex items-center gap-1.5 shadow-lg pointer-events-none">
-              <Eye className="w-3.5 h-3.5 text-sky-400" />
-              <span className="hidden sm:inline">박스 영역을 클릭하면 하단 상세 제원이 즉시 전환됩니다</span>
-              <span className="sm:hidden">박스 클릭 시 상세 전환</span>
+                    {/* Relative Area Meter */}
+                    <div className="mt-4 space-y-1">
+                      <div className="flex justify-between text-[11px] text-slate-400">
+                        <span>상대 면적 비율 (4K=100%)</span>
+                        <span className="font-mono text-slate-200 font-semibold">{card.pct}%</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full transition-all duration-500"
+                          style={{ width: `${card.pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-1 text-xs">
+                      <div className="flex justify-between text-slate-400">
+                        <span>1차로 번호판 폭:</span>
+                        <span className="font-mono text-emerald-400 font-bold">{card.ppm1}</span>
+                      </div>
+                      <div className="text-slate-400 text-[11px] mt-1">{card.desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
           
           <p className="text-xs text-slate-400 text-center font-medium">
             * 위 시각화는 16:9 및 4:3 비율의 대략적인 면적(총 픽셀 수)을 비교하기 위한 예시입니다. 클릭하여 각 규격의 상세 제원을 확인할 수 있습니다.
