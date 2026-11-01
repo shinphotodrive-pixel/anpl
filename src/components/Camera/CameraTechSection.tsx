@@ -22,7 +22,14 @@ import {
   Compass,
   BarChart3,
   Minimize2,
-  Maximize2
+  Maximize2,
+  AlertTriangle,
+  CheckCircle2,
+  Target,
+  ArrowDown,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface TermItem {
@@ -361,12 +368,190 @@ const TERMINOLOGY_DATA: TermItem[] = [
   }
 ];
 
+export interface FaqItem {
+  id: string;
+  category: 'diffraction' | 'aberration' | 'curvature' | 'mtf' | 'its';
+  categoryLabel: string;
+  question: string;
+  questionEn: string;
+  badge: string;
+  summary: string;
+  answer: string[];
+  formula?: string;
+  formulaDesc?: string;
+  keyPoints: string[];
+  alprApplication: string;
+}
+
+export const LENS_OPTICS_FAQ: FaqItem[] = [
+  {
+    id: 'diffraction-limit',
+    category: 'diffraction',
+    categoryLabel: '회절 물리',
+    badge: '파동 광학 한계',
+    question: '조리개를 F16, F22로 깊게 조이면 왜 심도는 깊어지는데 전체 화질이 소프트해지나요? (회절 한계와 에어리 디스크)',
+    questionEn: 'Why does closing down to F16-F22 soften image sharpness despite deeper DOF? (Diffraction Limit & Airy Disk)',
+    summary: '조리개 구경이 좁아질수록 빛의 파동성으로 인해 에어리 디스크(Airy Disk) 직경이 센서의 픽셀 피치를 초과하여 전 영역의 미세 콘트라스트가 저하되는 현상입니다.',
+    answer: [
+      '기하 광학 관점에서는 조리개를 조일수록 광선 다발이 가늘어져 피사계 심도(DOF)가 깊어지고 기하학적 구면수차가 사라집니다. 그러나 물리 광학(파동 광학) 관점에서는 좁은 조리개 개구부를 통과하는 빛이 회절(Diffraction) 현상을 일으켜 점광원이 단일 점으로 모이지 않고 중심 원반과 동심원 고리(에어리 디스크 패턴)를 형성합니다.',
+      '에어리 디스크의 직경 d_airy = 2.44 × λ × N 공식에 따라, 가시광선 기준 파장 550nm에서 F2.8일 때 약 3.76㎛이던 에어리 디스크가 F16에서는 21.47㎛, F22에서는 29.52㎛로 거대해집니다.',
+      '현대 고화소 머신비전 및 풀프레임 센서의 화소 크기(픽셀 피치 2.4㎛~3.76㎛)보다 회절 원반이 6배~8배 이상 커지므로, 인접 화소들로 광자가 번져 번호판 문자의 날카로운 엣지가 뿌옇게 흐려지는 회절 블러(Diffraction Blur)가 발생합니다.'
+    ],
+    formula: 'd_{airy} = 2.44 \\times \\lambda \\times N \\quad (\\text{Rayleigh Criterion}: \\theta = 1.22 \\frac{\\lambda}{D})',
+    formulaDesc: 'λ: 빛 파장(~550nm 녹색광), N: 조리개 F값, D: 입사동 유효 직경. F값이 2배 커질 때마다 회절 원반 크기도 정확히 2배 선형 증가함',
+    keyPoints: [
+      '스위트 스팟(Sweet Spot): 대부분의 렌즈는 조리개 개방 수차와 회절의 균형점인 F4.0~F5.6에서 최고 MTF 해상력을 발휘함',
+      '회절 시작 한계(Diffraction Onset): 에어리 디스크 중심 디스크 크기가 센서 픽셀 크기의 약 2배를 넘어서는 시점(통상 F8 이상)부터 고주파수(30 lp/mm) 콘트라스트가 급락함',
+      '심도와 해상도의 트레이드오프: 다차선 팬포커스를 얻기 위해 F16 이상으로 조이기보다, 과초점 거리(Hyperfocal) 계산을 적용한 F5.6 세팅이 선예도 보존에 유리함'
+    ],
+    alprApplication: '도로 단속 카메라 설계 시 심도를 위해 무작정 F16~F22로 조이면 야간 번호판 문자의 얇은 획(가, 나, 다의 모음)이 회절로 뭉개져 OCR 인식률이 15% 이상 하락합니다. F4.0~F5.6 구간을 기본으로 세팅하고 초점 심도는 렌즈 마운트 각도와 과초점 거리로 해결해야 합니다.'
+  },
+  {
+    id: 'chromatic-aberration',
+    category: 'aberration',
+    categoryLabel: '광학 수차',
+    badge: '파장별 분산 오차',
+    question: '색수차(축상 색수차 vs 배율 색수차)는 렌즈 결상에 어떤 오차를 유발하며 어떻게 교정되나요?',
+    questionEn: 'How do Longitudinal and Lateral Chromatic Aberrations distort imaging and how are they corrected?',
+    summary: '유리 매질의 파장별 굴절률 차이(아베수 분산)로 인해 적색, 녹색, 청색 파장의 초점면과 배율이 달라져 경계면에 보라색/녹색 테두리가 생기는 광학 오차입니다.',
+    answer: [
+      '1. 축상 색수차 (Longitudinal / Axial CA, LoCA): 광축 방향(전후 깊이)을 따라 파장별 초점 위치가 다르게 맺힙니다. 파장이 짧은 청색광은 렌즈에 가까운 쪽에, 파장이 긴 적색광은 먼 쪽에 초점이 맺히므로, 초점면 앞뒤에 보라색(Magenta)과 녹색(Green)의 색번짐이 나타납니다. 조리개를 조이면(F값을 키우면) 심도가 깊어지며 상당 부분 개선됩니다.',
+      '2. 배율 색수차 (Lateral / Transverse CA, LaCA): 화면 중심이 아닌 주변부로 갈수록 파장별 상의 크기(배율)가 달라져 발생합니다. 물체의 중심에서 주변부로 갈수록 빨강-청록(Red-Cyan) 또는 파랑-노랑(Blue-Yellow) 테두리가 방사형으로 어긋납니다. 조리개를 조여도 사라지지 않으며 렌즈 광학 설계 자체로만 교정할 수 있습니다.',
+      '3. 교정 메커니즘: 굴절률과 분산도(아베수)가 상반되는 크라운 유리와 플린트 유리를 접합한 아크로매틱(Achromatic, 2파장 일치) 또는 초저분산(ED, Fluorite) 글래스를 3매 이상 조합한 아포크로매틱(APO, 3파장 완전 일치) 군을 사용하여 잔여 2차 스펙트럼(Secondary Spectrum)을 마이크론 단위로 억제합니다.'
+    ],
+    formula: '\\Delta f = \\frac{f}{V_d} \\quad (V_d = \\frac{n_d - 1}{n_F - n_C})',
+    formulaDesc: 'V_d: 아베수(Abbe Number, 분산율의 역수). 아베수가 클수록(ED 렌즈 V_d > 80) 색 분산이 적어 색수차가 극도로 작아짐',
+    keyPoints: [
+      '축상 색수차는 조리개를 2~3스탑 조이면 자연스럽게 감쇄되지만, 배율 색수차는 조리개로 줄일 수 없음',
+      '고화소 센서에서 배율 색수차는 MTF 곡선의 주변부(Corner) 콘트라스트를 급격히 떨어뜨리는 주원인임',
+      '소프트웨어 디지털 색수차 보정은 R/B 채널의 스케일을 리샘플링하여 맞추므로 미세한 보간 블러가 발생할 수 있음'
+    ],
+    alprApplication: '야간에 고출력 LED 헤드라이트나 가로등 역광이 차량 번호판에 강하게 반사될 때, 색수차가 발생하면 검은색 문자 외곽에 보라색 색번짐(Purple Fringing)이 생겨 흑백 이진화(Binarization) 단계에서 문자 굵기가 왜곡되고 OCR 인식기가 "8"을 "0"으로 오인식할 위험이 커집니다. 반드시 ED 글래스가 적용된 산업용 머신비전 렌즈를 채택해야 합니다.'
+  },
+  {
+    id: 'field-curvature',
+    category: 'curvature',
+    categoryLabel: '상면만곡',
+    badge: '3차원 곡면 초점',
+    question: '상면만곡(Field Curvature & Petzval Surface)이란 무엇이며, 평면 센서와 다차선 도로 감시에서 왜 문제가 되나요?',
+    questionEn: 'What is Field Curvature and why does it degrade sharpness on flat sensors and multi-lane roads?',
+    summary: '렌즈의 광학 굴절 특성상 초점이 맺히는 결상면이 평면이 아니라 오목한 곡면(Petzval Surface)을 형성하여, 센서 중앙에 초점을 맞추면 주변부가 흐려지고 주변부에 맞추면 중앙이 흐려지는 수차입니다.',
+    answer: [
+      '인간의 눈은 망막 자체가 곡면이어서 상면만곡의 영향을 받지 않지만, 디지털 카메라의 CMOS 센서는 완전히 평평한 실리콘 웨이퍼 평면입니다. 렌즈를 통과한 빛의 결상면은 펫츠발 곡면(Petzval Surface)이라 불리는 곡면으로 휘어지기 때문에, 센서 중심에 완벽히 초점을 맞추면 렌즈 주변부(Corner 15~21.6mm)의 초점면은 센서 앞쪽으로 전진하여 센서 면에는 디포커스된 착란원이 맺힙니다.',
+      'MTF 곡선 관점에서 상면만곡이 크면 방사선(Sagittal)과 동심원(Meridional) 곡선이 중심에서 주변부로 갈수록 급격히 동반 하락하며, 주변부에서 최고 해상력을 얻기 위해 렌즈 초점링을 돌리면 중심부 해상력이 반대로 붕괴합니다.',
+      '현대 고성능 렌즈는 센서 직전에 네거티브 굴절력의 필드 플래트너(Field Flattener) 렌즈 요소를 배치하거나 복합 비구면 렌즈를 사용하여 펫츠발 합(Petzval Sum = Σ 1/(n·f))을 0에 가깝게 상쇄 교정합니다.'
+    ],
+    formula: '\\frac{1}{R_p} = - \\sum_{i} \\frac{1}{n_i f_i} \\quad (\\text{Petzval Sum})',
+    formulaDesc: 'R_p: 펫츠발 곡면의 곡률 반경. 렌즈 요소들의 굴절률 n과 초점거리 f의 조합으로 펫츠발 합이 0이 되어야 결상면이 완벽한 평면이 됨',
+    keyPoints: [
+      '초광각 렌즈(16mm~24mm)에서 상면만곡이 가장 두드러지며, 조리개를 F5.6~F8로 조이면 심도 대역이 곡면을 덮어 완화됨',
+      '비점수차(Astigmatism)와 결합하면 주변부 상이 방사선 방향과 동심원 방향으로 서로 다른 깊이에서 맺히는 복합 수차로 발전함',
+      '머신비전 전용 렌즈는 센서 전 영역에 걸쳐 평면성을 보증하는 플랫 필드(Flat-field) 광학 설계가 필수적임'
+    ],
+    alprApplication: '1개 차로만 감시하는 정면 카메라는 중앙 초점만으로 충분하지만, 1대의 카메라로 3개 차로(1차선, 2차선, 3차선)를 동시에 커버하는 광각 ALPR 시스템에서는 상면만곡으로 인해 2차선 중앙 차량은 선명한 반면 1차선과 3차선 끝에 진입한 차량 번호판이 아웃포커싱되어 판독 실패율이 40% 이상 급증합니다. 필드 플래트너가 내장된 머신비전 렌즈를 사용하거나 과초점 심도를 넓혀야 합니다.'
+  },
+  {
+    id: 'astigmatism-coma',
+    category: 'aberration',
+    categoryLabel: '광학 수차',
+    badge: '방사/동심원 비대칭',
+    question: '비점수차(Astigmatism)와 코마수차(Coma)는 MTF 곡선의 실선/점선 간격과 야간 번호판 결상에 어떤 영향을 주나요?',
+    questionEn: 'How do Astigmatism and Coma create gaps between Sagittal/Meridional MTF curves and blur night plates?',
+    summary: '비점수차는 렌즈 중심축에서 벗어난 빛의 수직/수평 단면 굴절률 차이로 인해 발생하며, MTF 차트에서 Sagittal(실선)과 Meridional(점선)의 간격이 벌어지는 원인이 됩니다. 코마 수차는 점광원이 혜성 꼬리 모양으로 비대칭 번지는 현상입니다.',
+    answer: [
+      '1. 비점수차의 메커니즘: 점광원에서 나온 빛 중 렌즈의 반지름 방향 단면을 지나는 광선(Sagittal / Radial)과 접선 방향 단면을 지나는 광선(Meridional / Tangential)이 서로 다른 위치에 선(Line) 형태로 초점을 맺습니다. 초점면 사이에서는 원형이 아닌 타원형 흐림이 발생합니다. MTF 곡선에서 실선(S)과 점선(M)이 일치하지 않고 크게 벌어지는 이유가 바로 비점수차 때문입니다.',
+      '2. 코마 수차의 메커니즘: 비축 광선이 조리개 구경의 중심을 지날 때와 주변부를 지날 때의 배율 차이로 인해 발생합니다. 점광원(야간 전조등, 번호판 반사 리플렉터)의 상이 둥근 점이 아니라 바깥쪽으로 혜성(Comet)의 꼬리처럼 번지는 비대칭 플레어가 발생합니다.',
+      '3. 두 수차의 복합 영향: 비점수차가 심하면 번호판의 세로 획(예: "1", "l")은 선명한데 가로 획(예: "一", "ㅡ")은 흐려지는 방향성 선택적 블러가 발생하며, 코마 수차가 더해지면 야간 고대비 문자 윤곽선이 한쪽 방향으로 흘러내려 형태학적 팽창/수축 오인식을 유발합니다.'
+    ],
+    formula: 'W_{astig} = w_{222} H^2 r^2 \\cos^2 \\theta, \\quad W_{coma} = w_{131} H r^3 \\cos \\theta',
+    formulaDesc: 'H: 이미지 상고(센서 중심에서의 거리), r: 입사동 반경. 비점수차는 상고의 제곱(H²)에 비례하여 주변부 코너에서 기하급수적으로 폭증함',
+    keyPoints: [
+      'MTF 평가 기준: Sagittal 곡선과 Meridional 곡선의 차이(Δ S-M)가 10% 이내로 밀착되어 있을수록 비점수차가 완벽히 억제된 특급 렌즈임',
+      '조리개 효과: 코마 수차는 렌즈 주변부 광선을 차단(조리개 F2.8~F4로 조임)하면 극적으로 사라지며, 비점수차 또한 크게 완화됨',
+      '비구면(Aspherical) 렌즈 채택 시 구면수차와 함께 코마/비점수차를 단 1~2매의 특수 렌즈로 동시 교정 가능'
+    ],
+    alprApplication: '야간에 고속 주행 차량의 번호판을 적외선(IR) 플래시로 비출 때, 번호판 볼트나 글자 모서리 고반사 지점에서 코마 수차가 발생하면 날카로운 엣지가 혜성 꼬리처럼 퍼져 번호판 문자 "3"이 "8"로, "5"가 "6"으로 오인식되는 주요 원인이 됩니다. 비점수차가 적고 S/M 곡선 일치율이 90% 이상인 머신비전 전용 단렌즈가 요구됩니다.'
+  },
+  {
+    id: 'spatial-frequency',
+    category: 'mtf',
+    categoryLabel: 'MTF/해상력',
+    badge: '공간 주파수 표준',
+    question: 'MTF 공간 주파수(10 lp/mm vs 30 lp/mm vs 50 lp/mm)는 번호판 인식에서 각각 무엇을 의미하나요?',
+    questionEn: 'What do 10 lp/mm, 30 lp/mm, and 50 lp/mm mean in MTF analysis for license plate recognition?',
+    summary: '공간 주파수는 1mm 안에 검은색과 흰색 줄무늬 쌍이 몇 개 들어가는지(line pairs per mm)를 나타내는 지표입니다. 10 lp/mm는 매크로 명암비(콘트라스트)를, 30 lp/mm는 미세 글자 선예도를, 50 lp/mm는 초고해상도 센서의 분해 한계를 대변합니다.',
+    answer: [
+      '1. 10 lp/mm (저주파수 - 콘트라스트 & 사각 프레임 인식): 1mm 공간에 10개의 명암 줄무늬 쌍이 들어가는 굵직한 패턴입니다. 렌즈가 물체의 거시적 명암비와 굵은 윤곽선을 얼마나 쨍하게 센서에 전달하는지를 평가합니다. 번호판 사각 외곽 테두리 검출(Detection) 및 차량 외형 바운딩 박스를 찾는 1단계 YOLO 모델의 정확도를 좌우합니다. 10 lp/mm가 80% 이상이어야 안개나 역광에서도 번호판 위치를 놓치지 않습니다.',
+      '2. 30 lp/mm (중고주파수 - 선예도 & 문자 획 분해능): 1mm 공간에 30쌍의 미세 패턴이 들어가는 주파수입니다. 번호판 숫자의 얇은 획, 한글 모음/자음(예: "어"와 "여", "바"와 "하")의 미세한 간극을 분리해내는 실질적인 OCR 해상력 지표입니다. 30 lp/mm가 최소 50% 이상(우수 렌즈 70% 이상) 유지되어야 폰트 획이 서로 뭉개지지 않고 정확한 글자 인식이 가능합니다.',
+      '3. 50 lp/mm 이상 (초고주파수 - 초고화소 센서 & 위변조 방지 패턴): 픽셀 피치가 2㎛대인 4,500만~6,100만 화소 센서의 광학 분해능 한계를 시험합니다. 국토교통부 표준 8자리 반사필름식 번호판에 인쇄된 미세 태극 문양, 홀로그램 위변조 방지 패턴, 엠보싱 표면 텍스처를 식별하는 정밀 감식 시스템에서 요구됩니다.'
+    ],
+    formula: '\\nu = \\frac{1}{2 \\Delta x} \\quad (\\text{Nyquist Sampling Limit}: \\nu_{nyquist} = \\frac{1}{2 \\times p_{pixel}})',
+    formulaDesc: 'p: 센서 픽셀 크기. 3.76㎛ 화소 센서의 나이퀴스트 한계는 약 133 lp/mm이며, 광학계가 30~50 lp/mm에서 높은 MTF를 유지해야 센서 성능을 100% 인출함',
+    keyPoints: [
+      '콘트라스트(10 lp/mm)만 높고 해상력(30 lp/mm)이 낮으면: 사진은 쨍해 보이지만 글자 획 간격이 뭉쳐 OCR이 실패함',
+      '해상력(30 lp/mm)은 높으나 콘트라스트(10 lp/mm)가 낮으면: 미세 선은 분리되나 뿌연 연무가 낀 것처럼 대비가 부족해 저조도에서 인식률이 떨어짐',
+      '이상적인 ALPR 렌즈: 10 lp/mm 90% 이상 + 30 lp/mm 60% 이상이 센서 중심부터 코너까지 평탄하게 유지되어야 함'
+    ],
+    alprApplication: '원거리(30m~50m) 고속 주행 차량의 번호판은 센서 상에서 가로 120픽셀 미만의 작은 크기로 맺힙니다. 이때 렌즈의 30 lp/mm MTF가 40% 미만으로 떨어지면 "0", "8", "6", "9"와 같은 곡선 숫자의 구멍(Loop)이 메워져 오인식의 주원인이 됩니다. 30 lp/mm 성능이 검증된 렌즈를 선택해야 합니다.'
+  },
+  {
+    id: 'geometric-distortion',
+    category: 'aberration',
+    categoryLabel: '광학 수차',
+    badge: '기하 기형 왜곡',
+    question: '렌즈 왜곡(배럴 왜곡 vs 핀쿠션 왜곡)과 소프트웨어 보정이 주변부 MTF 해상력에 미치는 영향은?',
+    questionEn: 'How do Barrel/Pincushion Distortion and Software Lens Correction affect peripheral MTF resolution?',
+    summary: '조리개 위치와 렌즈 군의 구면 수차로 인해 화면 중심과 주변부의 횡배율이 일정하지 않아 직선이 곡선으로 휘는 현상입니다. 소프트웨어 왜곡 보정 시 픽셀을 강제로 늘이면서 코너부 해상도가 최대 30% 저하됩니다.',
+    answer: [
+      '1. 배럴 왜곡 (Barrel Distortion, 음의 왜곡): 조리개가 렌즈군 뒤쪽에 위치하는 광각 렌즈에서 주로 발생하며, 주변부로 갈수록 배율이 감소하여 직선이 바깥쪽으로 둥글게 불룩해집니다. 도로 수평선과 직사각형 번호판이 볼록 렌즈처럼 휭글게 왜곡됩니다.',
+      '2. 핀쿠션 왜곡 (Pincushion Distortion, 양의 왜곡): 조리개가 렌즈군 앞쪽에 있는 망원 렌즈에서 발생하며, 주변부로 갈수록 배율이 증가하여 사각형 모서리가 안쪽으로 오목하게 잡아당겨집니다.',
+      '3. 소프트웨어 왜곡 보정의 치명적 트레이드오프: 최신 미러리스 카메라는 렌즈 소형화를 위해 광학 왜곡을 방치하고 내장 ISP 프로파일로 디지털 픽셀을 리샘플링하여 직선을 폅니다. 그러나 모서리 픽셀을 120%~140% 강제로 늘려 보간(Interpolation)하는 과정에서 주변부 유효 픽셀 밀도가 희석되어, MTF 측정 시 코너부 30 lp/mm 선예도가 20%~30% 즉각 소실됩니다.'
+    ],
+    formula: '\\text{Distortion (\\%)} = \\frac{y_{actual} - y_{predicted}}{y_{predicted}} \\times 100',
+    formulaDesc: 'y_actual: 실제 맺힌 상의 중심 거리, y_predicted: 1차 근사 비례 광학상 이상적 거리. 1% 미만이어야 왜곡 없는 정밀 계측 렌즈로 인정됨',
+    keyPoints: [
+      '광학 교정 렌즈(Low Distortion Lens): 복합 비구면 렌즈를 사용하여 광학 하드웨어 자체로 왜곡을 0.5% 미만으로 억제함',
+      '소프트웨어 보정의 한계: 가장자리 번호판을 펼칠 때 텍스처 블러와 노이즈 증폭이 함께 수반됨',
+      '왜곡이 심할수록 투시 변환(Perspective Transform) 매트릭스 계산 시 모서리 좌표 오차가 누적됨'
+    ],
+    alprApplication: '지능형 교통 시스템(ITS)에서 속도 위반 측정 및 차로 침범 판독 시 왜곡이 심한 렌즈를 쓰면 소프트웨어 보정 후 가장자리 차로(갓길) 번호판 문자가 옆으로 길게 늘어지며 선예도가 뭉개집니다. 따라서 소프트웨어 보정에 의존하지 않고 광학 자체 왜곡률이 1% 이하인 저왜곡(Low-Distortion) 머신비전 전용 렌즈를 선택해야 합니다.'
+  },
+  {
+    id: 'telecentric-optics',
+    category: 'its',
+    categoryLabel: '특수 광학계',
+    badge: '원근 왜곡 0%',
+    question: '머신비전 텔레센트릭(Telecentric) 렌즈는 어떻게 원근 왜곡(Perspective Error)을 없애며 번호판 정밀 계측에 쓰이나요?',
+    questionEn: 'How do Telecentric Lenses eliminate perspective error for precision license plate measurement?',
+    summary: '주광선(Chief Ray)이 광축과 완전히 평행하게 입사하도록 조리개 초점 위치를 설계하여, 피사체가 카메라 쪽으로 다가오거나 멀어져도 상의 크기(배율)가 절대 변하지 않는 궁극의 측정용 광학계입니다.',
+    answer: [
+      '1. 일반 엔센트릭(Entocentric) 렌즈의 원근 왜곡: 일반 렌즈는 원근법(Perspective)의 지배를 받으므로 카메라에 가까운 물체는 크게, 먼 물체는 작게 맺힙니다. 차량이 카메라로 접근하면서 1m 이동할 때마다 번호판 크기가 실시간으로 커지고, 비스듬한 각도에서는 사다리꼴 원근 왜곡(Keystone effect)이 발생합니다.',
+      '2. 물체측 텔레센트릭 (Object-space Telecentric): 조리개 조리개판(Aperture Stop)을 렌즈의 후방 초점면(Back Focal Plane)에 정확히 배치하여, 광축과 평행하게 입사하는 주광선(Chief Ray)만을 센서로 통과시킵니다. 물체가 피사계 심도 내에서 앞뒤로 이동해도 배율이 1:1로 불변합니다.',
+      '3. 양측 텔레센트릭 (Bi-telecentric): 물체측과 센서측(상측) 모두 주광선이 평행하여, 센서 조립 오차나 렌즈 초점 오차에도 완벽한 기하학적 치수 정밀도를 유지합니다.'
+    ],
+    formula: '\\beta = \\frac{y\'}{y} = \\text{Constant} \\quad (\\text{Chief ray angle } \\theta_{chief} = 0^\\circ)',
+    formulaDesc: '물체 거리 s와 무관하게 결상 횡배율 β가 엄격한 상수로 고정됨',
+    keyPoints: [
+      '렌즈 전면부 유효 직경(구경)이 측정하고자 하는 물체의 대각선 크기보다 반드시 커야 하므로 렌즈가 대형화되고 고가임',
+      '피사체의 요철이나 입체 단차에 의해 가려지는 사각지대(Casting Shadow)가 발생하지 않음',
+      '국토교통부 표준 번호판의 폰트 자간, 자폭, 자간격 밀리미터(mm) 단위 정밀 규격 공차 검사에 표준 장비로 활용됨'
+    ],
+    alprApplication: '고속도로 톨게이트 스마트 톨링 및 주차장 정밀 과금 계측에서, 차량 서스펜션 높낮이나 정차 위치(±50cm)에 따른 번호판 크기 변동을 원천 제거합니다. 특히 자동차 번호판 위조·변조 여부를 가려내기 위해 글자의 가로/세로 비율과 폰트 두께를 마이크론 단위로 정밀 실측할 때 텔레센트릭 광학계를 표준 벤치마크로 사용합니다.'
+  }
+];
+
 export const CameraTechSection: React.FC = () => {
   // Sub-tabs: dashboard, exposure, sensor, cinema, lens, computational, dictionary
   const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'exposure' | 'sensor' | 'cinema' | 'lens' | 'computational' | 'dictionary'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTerm, setSelectedTerm] = useState<TermItem | null>(null);
+
+  // Lens Optics FAQ Collapsible State
+  const [isFaqSectionOpen, setIsFaqSectionOpen] = useState<boolean>(true);
+  const [expandedFaqIds, setExpandedFaqIds] = useState<string[]>(['diffraction-limit', 'chromatic-aberration', 'field-curvature']);
+  const [faqCategoryFilter, setFaqCategoryFilter] = useState<string>('all');
+  const [faqSearch, setFaqSearch] = useState<string>('');
 
   // Simulator State: ISO Invariance & Noise Calculator
   const [photons, setPhotons] = useState<number>(5000); // 100 ~ 50000
@@ -386,6 +571,16 @@ export const CameraTechSection: React.FC = () => {
 
   const codecChartRef = useRef<HTMLCanvasElement | null>(null);
   const codecChartInstance = useRef<Chart | null>(null);
+
+  // Dynamic MTF Simulator State
+  const [mtfFocalLength, setMtfFocalLength] = useState<number>(50); // 16 ~ 200 mm
+  const [mtfAperture, setMtfAperture] = useState<number>(4.0); // 1.2 to 22
+  const [mtfLensGrade, setMtfLensGrade] = useState<'prime' | 'zoom' | 'kit'>('prime');
+  const [mtfSensorFormat, setMtfSensorFormat] = useState<'ff' | 'apsc' | 'one_inch'>('ff');
+  const [mtfShow50lp, setMtfShow50lp] = useState<boolean>(false);
+
+  const mtfSimChartRef = useRef<HTMLCanvasElement | null>(null);
+  const mtfSimChartInstance = useRef<Chart | null>(null);
 
   // Calculations for ISO Invariance & Noise
   // Shot noise = sqrt(photons)
@@ -724,6 +919,217 @@ export const CameraTechSection: React.FC = () => {
     };
   }, [activeSubTab]);
 
+  // ==========================================
+  // MTF Physics Calculations
+  // ==========================================
+  const maxRadius = mtfSensorFormat === 'ff' ? 21.6 : mtfSensorFormat === 'apsc' ? 14.2 : 8.0;
+  const gradeFactor = mtfLensGrade === 'prime' ? 1.0 : mtfLensGrade === 'zoom' ? 0.88 : 0.74;
+
+  // 1. Wide-open aberration penalty (N < 2.8)
+  const wideAberration = Math.max(0, (2.8 - mtfAperture) / 2.8);
+  const centerWidePenalty = 18 * Math.pow(wideAberration, 1.8) * (1 / gradeFactor);
+  const cornerWidePenalty = 34 * wideAberration * (1 / gradeFactor);
+
+  // 2. Wave diffraction penalty (N > 5.6)
+  const airyDiskDiameter = +(2.44 * 0.55 * mtfAperture).toFixed(2); // in micrometers at 550nm green light
+  const diffractionExcess = Math.max(0, mtfAperture - 5.6);
+  const diffPenalty10 = diffractionExcess * 1.8;
+  const diffPenalty30 = diffractionExcess * 3.4;
+  const diffPenalty50 = Math.max(0, mtfAperture - 4.0) * 4.8;
+
+  // 3. Focal length field curvature & astigmatism
+  const isWide = mtfFocalLength < 28;
+  const isTele = mtfFocalLength > 85;
+  const astigmatismFactor = isWide 
+    ? 1 + ((28 - mtfFocalLength) / 12) * 1.15 
+    : isTele 
+      ? 0.75 
+      : 0.95;
+  const teleCornerBonus = isTele ? 0.72 : 1.0;
+
+  // Base center MTF
+  const center10 = Math.max(5, Math.min(99, +(99 * gradeFactor - centerWidePenalty - diffPenalty10).toFixed(1)));
+  const center30 = Math.max(2, Math.min(95, +(93 * gradeFactor - centerWidePenalty * 1.35 - diffPenalty30).toFixed(1)));
+  const center50 = Math.max(1, Math.min(88, +(85 * gradeFactor - centerWidePenalty * 1.7 - diffPenalty50).toFixed(1)));
+
+  // 9 sample points along the image field radius (from 0mm to maxRadius)
+  const sampleRadii = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0].map((frac) => +(frac * maxRadius).toFixed(1));
+
+  const s10Data: number[] = [];
+  const m10Data: number[] = [];
+  const s30Data: number[] = [];
+  const m30Data: number[] = [];
+  const s50Data: number[] = [];
+  const m50Data: number[] = [];
+
+  sampleRadii.forEach((r) => {
+    const rho = r / maxRadius; // 0 to 1
+    const s10Val = Math.max(10, Math.min(100, center10 - (14 * Math.pow(rho, 1.8) + cornerWidePenalty * Math.pow(rho, 2) * teleCornerBonus) * (1 / gradeFactor)));
+    const m10Val = Math.max(5, Math.min(s10Val, s10Val - (7 * Math.pow(rho, 2) * astigmatismFactor + 10 * wideAberration * rho)));
+
+    const s30Val = Math.max(5, Math.min(98, center30 - (24 * Math.pow(rho, 1.8) + cornerWidePenalty * 1.2 * Math.pow(rho, 2) * teleCornerBonus) * (1 / gradeFactor)));
+    const m30Val = Math.max(2, Math.min(s30Val, s30Val - (13 * Math.pow(rho, 2) * astigmatismFactor + 16 * wideAberration * rho)));
+
+    const s50Val = Math.max(2, Math.min(92, center50 - (32 * Math.pow(rho, 1.7) + cornerWidePenalty * 1.4 * Math.pow(rho, 2)) * (1 / gradeFactor)));
+    const m50Val = Math.max(1, Math.min(s50Val, s50Val - (18 * Math.pow(rho, 2) * astigmatismFactor + 20 * wideAberration * rho)));
+
+    s10Data.push(+s10Val.toFixed(1));
+    m10Data.push(+m10Val.toFixed(1));
+    s30Data.push(+s30Val.toFixed(1));
+    m30Data.push(+m30Val.toFixed(1));
+    s50Data.push(+s50Val.toFixed(1));
+    m50Data.push(+m50Val.toFixed(1));
+  });
+
+  const cornerS10 = s10Data[s10Data.length - 1];
+  const cornerM10 = m10Data[m10Data.length - 1];
+  const cornerS30 = s30Data[s30Data.length - 1];
+  const cornerM30 = m30Data[m30Data.length - 1];
+  const maxAstigmatism = +(cornerS30 - cornerM30).toFixed(1);
+
+  // Overall ALPR Resolution & OCR score
+  const ocrScore = Math.round(
+    Math.min(100, Math.max(20, (center30 * 0.45 + cornerS30 * 0.35 + (100 - maxAstigmatism * 1.5) * 0.2)))
+  );
+
+  // Optical regime description
+  const apertureState = mtfAperture <= 2.0 
+    ? { type: 'wide', label: '구면수차 & 코마 지배 구간 (개방 소프트)', color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800' }
+    : mtfAperture >= 11.0 
+      ? { type: 'diffraction', label: '에어리 디스크 파동 회절 한계선 (전체 해상도 저하)', color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800' }
+      : { type: 'sweet', label: '최고 선예도 스위트스팟 (수차 억제 & 고해상도)', color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800' };
+
+  // Sensor pixel pitch ratio (based on 3.76um full-frame 61MP sensor pixel)
+  const pixelRatio = (airyDiskDiameter / 3.76).toFixed(1);
+
+  // Visual simulation filter params
+  const centerBlurPx = Math.max(0, +( (100 - center30) / 40 ).toFixed(1));
+  const centerContrastPct = Math.max(65, Math.min(115, Math.round(center10 * 1.1)));
+  const cornerBlurPx = Math.max(0, +( (100 - cornerS30) / 28 + (cornerS30 - cornerM30) / 16 ).toFixed(1));
+  const cornerContrastPct = Math.max(50, Math.min(110, Math.round(cornerS10 * 1.05)));
+
+  // Dynamic MTF Simulator Chart.js Effect
+  useEffect(() => {
+    if (!mtfSimChartRef.current) return;
+
+    if (mtfSimChartInstance.current) {
+      mtfSimChartInstance.current.destroy();
+    }
+
+    const ctx = mtfSimChartRef.current.getContext('2d');
+    if (!ctx) return;
+
+    const datasets: any[] = [
+      {
+        label: '10 lp/mm Sagittal (방사선 콘트라스트)',
+        data: s10Data,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.05)',
+        borderWidth: 2.5,
+        tension: 0.25,
+        pointRadius: 3,
+        pointHoverRadius: 6
+      },
+      {
+        label: '10 lp/mm Meridional (동심원 콘트라스트)',
+        data: m10Data,
+        borderColor: '#60a5fa',
+        borderWidth: 2,
+        borderDash: [5, 4],
+        tension: 0.25,
+        pointRadius: 2.5
+      },
+      {
+        label: '30 lp/mm Sagittal (미세 선예도 / 폰트 분해능)',
+        data: s30Data,
+        borderColor: '#dc2626',
+        backgroundColor: 'rgba(220, 38, 38, 0.05)',
+        borderWidth: 2.5,
+        tension: 0.25,
+        pointRadius: 3,
+        pointHoverRadius: 6
+      },
+      {
+        label: '30 lp/mm Meridional (동심원 선예도)',
+        data: m30Data,
+        borderColor: '#f87171',
+        borderWidth: 2,
+        borderDash: [5, 4],
+        tension: 0.25,
+        pointRadius: 2.5
+      }
+    ];
+
+    if (mtfShow50lp) {
+      datasets.push({
+        label: '50 lp/mm Sagittal (초고주파 분해능 한계)',
+        data: s50Data,
+        borderColor: '#9333ea',
+        borderWidth: 1.8,
+        tension: 0.25,
+        pointRadius: 2
+      });
+      datasets.push({
+        label: '50 lp/mm Meridional (초고주파 동심원)',
+        data: m50Data,
+        borderColor: '#c084fc',
+        borderWidth: 1.5,
+        borderDash: [3, 3],
+        tension: 0.25,
+        pointRadius: 2
+      });
+    }
+
+    mtfSimChartInstance.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: sampleRadii.map((r) => `${r}mm`),
+        datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 250 },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { boxWidth: 14, font: { size: 11 } }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            title: { display: true, text: '변조 전달률 Contrast (%)', font: { size: 11 } },
+            grid: { color: 'rgba(148, 163, 184, 0.15)' },
+            ticks: { stepSize: 20 }
+          },
+          x: {
+            title: { 
+              display: true, 
+              text: `센서 중심(0mm) ~ 주변부 대각선(${maxRadius}mm) 위치`, 
+              font: { size: 11 } 
+            },
+            grid: { color: 'rgba(148, 163, 184, 0.15)' }
+          }
+        }
+      }
+    });
+
+    return () => {
+      if (mtfSimChartInstance.current) {
+        mtfSimChartInstance.current.destroy();
+      }
+    };
+  }, [mtfFocalLength, mtfAperture, mtfLensGrade, mtfSensorFormat, mtfShow50lp]);
+
   // Filter terms by search query and category
   const filteredTerms = TERMINOLOGY_DATA.filter((term) => {
     const matchesSearch = 
@@ -733,6 +1139,31 @@ export const CameraTechSection: React.FC = () => {
       term.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || term.category === selectedCategory;
     return matchesSearch && matchesCategory;
+  });
+
+  // FAQ toggles and filter helpers
+  const toggleFaqItem = (id: string) => {
+    setExpandedFaqIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const expandAllFaqs = () => {
+    setExpandedFaqIds(LENS_OPTICS_FAQ.map((item) => item.id));
+  };
+
+  const collapseAllFaqs = () => {
+    setExpandedFaqIds([]);
+  };
+
+  const filteredFaqs = LENS_OPTICS_FAQ.filter((item) => {
+    const matchesCategory = faqCategoryFilter === 'all' || item.category === faqCategoryFilter;
+    const matchesSearch = 
+      item.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
+      item.questionEn.toLowerCase().includes(faqSearch.toLowerCase()) ||
+      item.summary.toLowerCase().includes(faqSearch.toLowerCase()) ||
+      item.alprApplication.toLowerCase().includes(faqSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
 
   return (
@@ -1614,6 +2045,30 @@ export const CameraTechSection: React.FC = () => {
       {/* ============================================================== */}
       {activeSubTab === 'lens' && (
         <div className="space-y-6">
+          {/* Quick jump to dynamic MTF simulator */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-gradient-to-r from-blue-900/20 via-indigo-900/20 to-slate-900/20 border border-blue-500/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-blue-600 text-white rounded-xl shadow-xs">
+                <Target className="w-4 h-4" />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                  가상 MTF 동적 시뮬레이터 차트 (초점거리 &amp; 조리개 가변)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  F1.2~F22 조리개와 16~200mm 초점거리 변경에 따른 실시간 곡선 변화 및 번호판 결상 시뮬레이션을 하단에서 조작하세요.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => document.getElementById('dynamic-mtf-simulator')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition shrink-0"
+            >
+              <span>하단 시뮬레이터로 이동</span>
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {/* MTF Curve Interactive Chart */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -1886,6 +2341,669 @@ export const CameraTechSection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ============================================================== */}
+      {/* 4. DYNAMIC MTF CURVE SIMULATOR (CameraTechSection 하단) */}
+      {/* ============================================================== */}
+      <section 
+        id="dynamic-mtf-simulator" 
+        className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-blue-500/30 shadow-xl space-y-6 relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Section Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/20">
+                <Target className="w-5 h-5" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 px-2.5 py-0.5 rounded-full">
+                Interactive MTF Simulator
+              </span>
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border flex items-center gap-1.5 ${apertureState.color}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                {apertureState.label}
+              </span>
+              <button
+                onClick={() => document.getElementById('lens-optics-faq')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-xs px-2.5 py-0.5 rounded-full font-semibold border flex items-center gap-1 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition cursor-pointer"
+                title="하단 렌즈 광학 FAQ로 이동"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>렌즈 광학 FAQ 해설 ↓</span>
+              </button>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              렌즈 광학 가상 MTF (Modulation Transfer Function) 동적 시뮬레이터
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-4xl leading-relaxed">
+              초점 거리(Focal Length)와 조리개(Aperture F-stop) 값 변경에 따라 렌즈의 공간 주파수(10, 30, 50 lp/mm) 방사선(Sagittal)/동심원(Meridional) 
+              콘트라스트 전달률 곡선 및 중심-주변부 결상 왜곡이 어떻게 달라지는지 물리학적 모델로 실시간 가상 생성합니다.
+            </p>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="shrink-0 flex flex-wrap lg:flex-col gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-500 font-mono">시뮬레이션 프리셋 (Presets):</span>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { name: '50mm F4.0 (ALPR 스위트스팟)', f: 50, n: 4.0, grade: 'prime' as const },
+                { name: '85mm F1.4 (야간 개방 수차)', f: 85, n: 1.4, grade: 'prime' as const },
+                { name: '24mm F2.8 (광각 교차로)', f: 24, n: 2.8, grade: 'zoom' as const },
+                { name: '50mm F22 (극단적 회절 한계)', f: 50, n: 22.0, grade: 'prime' as const },
+                { name: '135mm F5.6 (원거리 망원)', f: 135, n: 5.6, grade: 'prime' as const }
+              ].map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setMtfFocalLength(p.f);
+                    setMtfAperture(p.n);
+                    setMtfLensGrade(p.grade);
+                  }}
+                  className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition ${
+                    mtfFocalLength === p.f && Math.abs(mtfAperture - p.n) < 0.05 && mtfLensGrade === p.grade
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 2 Interactive Control Panels: Focal Length & Aperture */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-950/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+          
+          {/* Control 1: Aperture (F-stop) */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-blue-500" />
+                조리개 수치 (Aperture / F-stop)
+              </span>
+              <span className="font-mono text-base font-extrabold text-blue-600 dark:text-blue-400">
+                F{mtfAperture.toFixed(1)}
+              </span>
+            </div>
+
+            {/* Aperture Buttons Strip */}
+            <div className="grid grid-cols-6 sm:grid-cols-11 gap-1">
+              {[1.2, 1.4, 1.8, 2.0, 2.8, 4.0, 5.6, 8.0, 11, 16, 22].map((fVal) => {
+                const isSelected = Math.abs(mtfAperture - fVal) < 0.05;
+                return (
+                  <button
+                    key={fVal}
+                    onClick={() => setMtfAperture(fVal)}
+                    className={`py-1.5 text-xs font-mono font-bold rounded-lg border transition ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs scale-105'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-blue-400'
+                    }`}
+                  >
+                    f/{fVal}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Continuous Slider for Aperture */}
+            <input
+              type="range"
+              min="1.2"
+              max="22.0"
+              step="0.1"
+              value={mtfAperture}
+              onChange={(e) => setMtfAperture(Number(e.target.value))}
+              className="w-full accent-blue-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>F1.2 (대구경 개방 수차)</span>
+              <span>F4.0~5.6 (스위트스팟)</span>
+              <span>F22 (파동 회절 한계)</span>
+            </div>
+
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span>에어리 디스크 직경 (2.44λN):</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">
+                {airyDiskDiameter} ㎛ ({pixelRatio}x 센서 픽셀)
+              </span>
+            </div>
+          </div>
+
+          {/* Control 2: Focal Length (mm) */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Compass className="w-4 h-4 text-indigo-500" />
+                초점 거리 (Focal Length / mm)
+              </span>
+              <span className="font-mono text-base font-extrabold text-indigo-600 dark:text-indigo-400">
+                {mtfFocalLength} mm
+              </span>
+            </div>
+
+            {/* Focal Length Quick Buttons */}
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">
+              {[16, 24, 35, 50, 85, 135, 200].map((fl) => {
+                const isSelected = mtfFocalLength === fl;
+                return (
+                  <button
+                    key={fl}
+                    onClick={() => setMtfFocalLength(fl)}
+                    className={`py-1.5 text-xs font-mono font-bold rounded-lg border transition ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs scale-105'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-indigo-400'
+                    }`}
+                  >
+                    {fl}mm
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Continuous Slider for Focal Length */}
+            <input
+              type="range"
+              min="16"
+              max="200"
+              step="1"
+              value={mtfFocalLength}
+              onChange={(e) => setMtfFocalLength(Number(e.target.value))}
+              className="w-full accent-indigo-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>16mm (초광각 84°)</span>
+              <span>50mm (표준 47°)</span>
+              <span>200mm (망원 12°)</span>
+            </div>
+
+            {/* Secondary Controls: Lens Grade & Sensor Format */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 block mb-1">렌즈 광학 설계 등급</label>
+                <select
+                  value={mtfLensGrade}
+                  onChange={(e) => setMtfLensGrade(e.target.value as any)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="prime">마스터 단렌즈 (ED/비구면 100%)</option>
+                  <option value="zoom">프로 F2.8 줌렌즈 (88%)</option>
+                  <option value="kit">보급형 번들 렌즈 (74%)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 block mb-1">센서 포맷 규격 (대각)</label>
+                <select
+                  value={mtfSensorFormat}
+                  onChange={(e) => setMtfSensorFormat(e.target.value as any)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="ff">풀프레임 35mm (코너 21.6mm)</option>
+                  <option value="apsc">APS-C (코너 14.2mm)</option>
+                  <option value="one_inch">1인치 머신비전 (코너 8.0mm)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 6 Real-time Optical Physics Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 p-3 rounded-xl">
+            <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase block">
+              중심부 10 lp/mm (명암비)
+            </span>
+            <div className="text-xl font-mono font-black text-blue-600 dark:text-blue-400 mt-1">
+              {center10}%
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">윤곽 엣지 콘트라스트</span>
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 p-3 rounded-xl">
+            <span className="text-[10px] font-bold text-red-800 dark:text-red-300 uppercase block">
+              중심부 30 lp/mm (선예도)
+            </span>
+            <div className="text-xl font-mono font-black text-red-600 dark:text-red-400 mt-1">
+              {center30}%
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">글자 미세 분해능</span>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60 p-3 rounded-xl">
+            <span className="text-[10px] font-bold text-orange-800 dark:text-orange-300 uppercase block">
+              주변부 30 lp/mm (코너 {maxRadius}mm)
+            </span>
+            <div className="text-xl font-mono font-black text-orange-600 dark:text-orange-400 mt-1">
+              {cornerS30}%
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Sagittal 전달률</span>
+          </div>
+
+          <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 p-3 rounded-xl">
+            <span className="text-[10px] font-bold text-indigo-800 dark:text-indigo-300 uppercase block">
+              에어리 디스크 (d_airy)
+            </span>
+            <div className="text-xl font-mono font-black text-indigo-600 dark:text-indigo-400 mt-1">
+              {airyDiskDiameter} ㎛
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">회절 점상 지름</span>
+          </div>
+
+          <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 p-3 rounded-xl">
+            <span className="text-[10px] font-bold text-purple-800 dark:text-purple-300 uppercase block">
+              비점수차 (Astigmatism Δ)
+            </span>
+            <div className="text-xl font-mono font-black text-purple-600 dark:text-purple-400 mt-1">
+              {maxAstigmatism}%
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">S-M 곡선 편차</span>
+          </div>
+
+          <div className={`p-3 rounded-xl border ${
+            ocrScore >= 80 
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800/60' 
+              : ocrScore >= 60 
+                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800/60'
+                : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800/60'
+          }`}>
+            <span className="text-[10px] font-bold uppercase block text-slate-700 dark:text-slate-300">
+              ALPR 번호판 판독 지수
+            </span>
+            <div className={`text-xl font-mono font-black mt-1 ${
+              ocrScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' : ocrScore >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              {ocrScore}점
+            </div>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+              {ocrScore >= 85 ? '최적 (S-Rank)' : ocrScore >= 70 ? '양호 (A-Rank)' : ocrScore >= 50 ? '보통 (B-Rank)' : '경고 (C-Rank)'}
+            </span>
+          </div>
+        </div>
+
+        {/* Dynamic MTF Chart Canvas */}
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+            <span className="flex items-center gap-1.5">
+              <Eye className="w-4 h-4 text-blue-500" />
+              동적 MTF 곡선 (X축: 중심 0mm ~ 코너 {maxRadius}mm, Y축: Contrast 전달율 %)
+            </span>
+            <label className="flex items-center gap-2 cursor-pointer font-normal text-xs text-slate-600 dark:text-slate-400">
+              <input
+                type="checkbox"
+                checked={mtfShow50lp}
+                onChange={(e) => setMtfShow50lp(e.target.checked)}
+                className="rounded accent-purple-600"
+              />
+              <span>50 lp/mm 초고주파 곡선 추가 표시 (초고화소 센서)</span>
+            </label>
+          </div>
+
+          <div className="h-80 w-full bg-slate-50 dark:bg-slate-950/50 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <canvas ref={mtfSimChartRef} />
+          </div>
+
+          {/* Chart Legend Explanation */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-400 pt-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 bg-blue-600" />
+              <span>10 lp/mm 실선: Sagittal (방사선)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 border-t-2 border-dashed border-blue-400" />
+              <span>10 lp/mm 점선: Meridional (동심원)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 bg-red-600" />
+              <span>30 lp/mm 실선: Sagittal (선예도)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-0.5 border-t-2 border-dashed border-red-400" />
+              <span>30 lp/mm 점선: Meridional (선예도)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Real-world License Plate Crop Simulation (Center vs Edge) */}
+        <div className="bg-slate-50 dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-500" />
+                MTF 곡선 기반 실제 번호판 결상(Image Formation) 시뮬레이션 비교
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                현재 설정(F{mtfAperture.toFixed(1)}, {mtfFocalLength}mm)에서 센서 중심부와 주변부 코너에 맺히는 번호판의 폰트 콘트라스트 및 블러 왜곡을 실시간 렌더링합니다.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 rounded">
+              실시간 광학 필터 렌더링
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Center Crop */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  센서 중심부 결상 (Center 0.0mm)
+                </span>
+                <span className="font-mono text-slate-500">
+                  MTF30: {center30}% / MTF10: {center10}%
+                </span>
+              </div>
+
+              {/* License Plate Simulation Element */}
+              <div className="h-28 bg-slate-100 dark:bg-slate-950 rounded-lg flex items-center justify-center p-3 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div 
+                  className="bg-white text-slate-900 border-2 border-slate-800 px-4 py-2 rounded shadow-sm text-center font-mono transition-all duration-300"
+                  style={{
+                    filter: `blur(${centerBlurPx}px) contrast(${centerContrastPct}%)`,
+                    transform: 'scale(0.95)'
+                  }}
+                >
+                  <div className="text-[9px] text-slate-500 font-bold tracking-wider">대한민국 KOR</div>
+                  <div className="text-xl font-black tracking-widest text-slate-900">52가 3108</div>
+                  <div className="text-[9px] text-slate-600">친환경 전기차 규격</div>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {center30 >= 80 ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    중심부 선예도가 매우 우수하여 얇은 획과 번호판 볼트, 국기 문양이 선명하게 식별됩니다.
+                  </span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {mtfAperture >= 11 ? '회절로 인해 중심부 콘트라스트가 소프트해졌습니다.' : '개방 수차로 중심부 콘트라스트가 다소 감쇄되었습니다.'}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Corner Crop */}
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-orange-500" />
+                  센서 최외곽 코너 결상 (Corner {maxRadius}mm)
+                </span>
+                <span className="font-mono text-slate-500">
+                  Sagittal: {cornerS30}% / Meridional: {cornerM30}%
+                </span>
+              </div>
+
+              {/* License Plate Simulation Element */}
+              <div className="h-28 bg-slate-100 dark:bg-slate-950 rounded-lg flex items-center justify-center p-3 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div 
+                  className="bg-white text-slate-900 border-2 border-slate-800 px-4 py-2 rounded shadow-sm text-center font-mono transition-all duration-300"
+                  style={{
+                    filter: `blur(${cornerBlurPx}px) contrast(${cornerContrastPct}%)`,
+                    transform: `scale(0.95) skewX(${-(cornerS30 - cornerM30) * 0.4}deg)`
+                  }}
+                >
+                  <div className="text-[9px] text-slate-500 font-bold tracking-wider">대한민국 KOR</div>
+                  <div className="text-xl font-black tracking-widest text-slate-900">52가 3108</div>
+                  <div className="text-[9px] text-slate-600">주변부 입사 결상</div>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {cornerS30 >= 65 && maxAstigmatism <= 10 ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    주변부 비점수차가 억제되어 2~3차선 사각지대 차량 번호판도 OCR 인식 오차 없이 판독됩니다.
+                  </span>
+                ) : (
+                  <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    비점수차(편차 {maxAstigmatism}%) 및 주변부 광학 저하로 인해 획 뭉개짐(Astigmatism Blur)이 발생할 수 있습니다.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* ============================================================== */}
+      {/* 5. COLLAPSIBLE LENS OPTICS FAQ SECTION */}
+      {/* ============================================================== */}
+      <section 
+        id="lens-optics-faq" 
+        className="bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative overflow-hidden"
+      >
+        {/* Top Header with Master Collapse/Expand Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="p-2 bg-gradient-to-tr from-amber-600 to-indigo-600 text-white rounded-xl shadow-md shadow-amber-500/20">
+                <HelpCircle className="w-5 h-5" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
+                Technical Knowledge Base
+              </span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold border bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+                총 {LENS_OPTICS_FAQ.length}대 핵심 Q&amp;A
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              렌즈 광학 기술 FAQ (Lens Optics Deep FAQ)
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-4xl leading-relaxed">
+              새로운 MTF 분석기를 완벽히 이해하기 위한 핵심 개념인 <strong>회절 한계(Diffraction Limit)</strong>, 
+              <strong>색수차(Chromatic Aberration)</strong>, <strong>상면만곡(Field Curvature)</strong>, 
+              비점수차 및 텔레센트릭 광학계의 기술적 메커니즘과 ALPR 실무 적용 팁을 제공합니다.
+            </p>
+          </div>
+
+          {/* Section Collapse / Expand Master Controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setIsFaqSectionOpen(!isFaqSectionOpen)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+              title={isFaqSectionOpen ? 'FAQ 전체 접기' : 'FAQ 전체 펼치기'}
+            >
+              {isFaqSectionOpen ? (
+                <>
+                  <ChevronUp className="w-4 h-4 text-amber-500" />
+                  <span>FAQ 접기</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4 text-amber-500" />
+                  <span>FAQ 펼치기</span>
+                </>
+              )}
+            </button>
+
+            {isFaqSectionOpen && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={expandAllFaqs}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition cursor-pointer"
+                >
+                  모두 열기
+                </button>
+                <button
+                  onClick={collapseAllFaqs}
+                  className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                >
+                  모두 닫기
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Collapsible Content Body */}
+        {isFaqSectionOpen && (
+          <div className="space-y-5 animate-fadeIn">
+            {/* Category Filter & Quick Search Bar */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/70 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              {/* Category Pills */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { id: 'all', label: '전체 (All)' },
+                  { id: 'diffraction', label: '회절 물리 (Diffraction)' },
+                  { id: 'aberration', label: '광학 수차 (Aberration)' },
+                  { id: 'curvature', label: '상면만곡 (Field Curvature)' },
+                  { id: 'mtf', label: 'MTF/해상력 (10/30 lp/mm)' },
+                  { id: 'its', label: '특수 광학계 (Telecentric)' }
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setFaqCategoryFilter(cat.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      faqCategoryFilter === cat.id
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search Field */}
+              <div className="w-full md:w-64 relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={faqSearch}
+                  onChange={(e) => setFaqSearch(e.target.value)}
+                  placeholder="FAQ 내 검색 (예: 색수차, 30 lp/mm...)"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 text-xs rounded-lg pl-8 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 transition"
+                />
+                {faqSearch && (
+                  <button
+                    onClick={() => setFaqSearch('')}
+                    className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Accordion List */}
+            <div className="space-y-3">
+              {filteredFaqs.length === 0 ? (
+                <div className="text-center py-10 bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 text-xs text-slate-500">
+                  검색 결과와 일치하는 광학 기술 FAQ 항목이 없습니다.
+                </div>
+              ) : (
+                filteredFaqs.map((faq) => {
+                  const isExpanded = expandedFaqIds.includes(faq.id);
+                  return (
+                    <div
+                      key={faq.id}
+                      className="bg-white dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-500/50 transition-all overflow-hidden"
+                    >
+                      {/* Accordion Question Header */}
+                      <button
+                        onClick={() => toggleFaqItem(faq.id)}
+                        className="w-full px-5 py-4 text-left flex items-start justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition cursor-pointer"
+                      >
+                        <div className="space-y-1.5 flex-grow">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 rounded">
+                              {faq.categoryLabel}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                              {faq.badge}
+                            </span>
+                          </div>
+                          <h3 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
+                            {faq.question}
+                          </h3>
+                          <div className="text-xs font-mono text-slate-400">
+                            {faq.questionEn}
+                          </div>
+                        </div>
+
+                        {/* Expand Indicator */}
+                        <div className={`p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0 transition-transform duration-200 ${
+                          isExpanded ? 'rotate-180 bg-amber-500 text-white border-amber-500' : ''
+                        }`}>
+                          <ChevronDown className="w-4 h-4" />
+                        </div>
+                      </button>
+
+                      {/* Accordion Body Content */}
+                      {isExpanded && (
+                        <div className="px-5 pb-5 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-4 animate-fadeIn text-xs text-slate-700 dark:text-slate-300">
+                          {/* Summary Quote Box */}
+                          <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border-l-4 border-amber-500 text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                            {faq.summary}
+                          </div>
+
+                          {/* Detailed Answer Paragraphs */}
+                          <div className="space-y-2 leading-relaxed">
+                            {faq.answer.map((para, pIdx) => (
+                              <p key={pIdx} className="leading-relaxed">
+                                {para}
+                              </p>
+                            ))}
+                          </div>
+
+                          {/* Formula Card if present */}
+                          {faq.formula && (
+                            <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 font-mono space-y-1">
+                              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+                                관련 광학 물리 수학 공식
+                              </span>
+                              <div className="text-sm font-bold text-slate-900 dark:text-white">
+                                {faq.formula}
+                              </div>
+                              {faq.formulaDesc && (
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  {faq.formulaDesc}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Key Points Takeaway */}
+                          <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                              핵심 엔지니어링 체크포인트
+                            </h4>
+                            <ul className="space-y-1.5 list-disc list-inside text-slate-600 dark:text-slate-400">
+                              {faq.keyPoints.map((kp, kIdx) => (
+                                <li key={kIdx} className="leading-relaxed">{kp}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Practical ALPR Tip Box */}
+                          <div className="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900/60 space-y-1">
+                            <span className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5 text-xs">
+                              💡 ALPR / 머신비전 시스템 실무 적용 가이드
+                            </span>
+                            <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-xs">
+                              {faq.alprApplication}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* 4. Term Detail Modal */}
       {selectedTerm && (

@@ -19,6 +19,8 @@ import {
   Coins,
   CheckSquare,
   Camera,
+  Maximize,
+  SlidersHorizontal,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -130,6 +132,28 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-blue-500/20 to-cyan-500/10 border-blue-500/40 text-blue-400',
     badge: '광학·센서 분석',
     stats: '30+ 전문 용어 & 차트'
+  },
+  {
+    id: 'camera-6',
+    title: '글로벌 셔터 카메라 6종 비교 분석',
+    subTitle: 'MiriCam 6-Camera Global Shutter Suite',
+    description: '24GHz 레이더 동기화 글로벌 셔터 카메라 6종(Basler, FLIR, e-con, 라즈베리파이 등), 모션 블러 계산기, NDAA 규제 감사 및 추천 엔진.',
+    icon: SlidersHorizontal,
+    category: 'vision',
+    color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400',
+    badge: '글로벌셔터 6종',
+    stats: '6종 스펙 & NDAA 감사'
+  },
+  {
+    id: 'pixel',
+    title: '카메라 해상도 및 픽셀 규격 가이드',
+    subTitle: 'Resolution & Pixel Standard Guide',
+    description: 'HD, FHD(2M)부터 5M, 4K(8M)까지 해상도 비율 시각화, 차로별 번호판 유효 픽셀 폭(PPM) 및 머신비전 규격 상세 분석.',
+    icon: Maximize,
+    category: 'vision',
+    color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/40 text-indigo-400',
+    badge: '픽셀·해상도',
+    stats: '12종 해상도 & PPM 계산기'
   },
   {
     id: 'simulator',
@@ -256,6 +280,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         onScrollToModels={() => onNavigate('models')}
         onScrollToLighting={() => onNavigate('lighting')}
         onScrollToCamera={() => onNavigate('camera')}
+        onScrollToCameraSix={() => onNavigate('camera-6')}
+        onScrollToPixel={() => onNavigate('pixel')}
         onScrollToSimulator={() => onNavigate('simulator')}
         onScrollToBatch={() => onNavigate('batch')}
         onScrollToPresets={() => onNavigate('presets')}
@@ -271,14 +297,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <span>ALPR Complete Suite Directory</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            ALPR 18대 핵심 모듈 전체 둘러보기
+            ALPR 20대 핵심 모듈 전체 둘러보기
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             원하시는 메뉴 탭을 선택하시면 스크롤 없이 해당 페이지로 독립 전환되어 상세 연구 자료 및 인터랙티브 툴을 사용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Grid of 18 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        {/* Grid of 20 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MODULE_CARDS.map((item) => {
             const Icon = item.icon;

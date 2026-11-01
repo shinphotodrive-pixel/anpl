@@ -24,6 +24,8 @@ import {
   Coins,
   CheckSquare,
   Camera,
+  Maximize,
+  SlidersHorizontal,
   Sun,
   Moon
 } from 'lucide-react';
@@ -46,6 +48,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'models', label: '모델', icon: Brain, badge: 'ONNX/DNN' },
   { id: 'lighting', label: '조명', icon: Lightbulb, badge: '광학' },
   { id: 'camera', label: '카메라', icon: Camera, badge: '센서/광학' },
+  { id: 'camera-6', label: '카메라 6종', icon: SlidersHorizontal, badge: '글로벌셔터' },
+  { id: 'pixel', label: '픽셀', icon: Maximize, badge: '해상도' },
   { id: 'simulator', label: '증강 시뮬레이터', icon: Sliders, badge: '시뮬' },
   { id: 'batch', label: '배치 처리기', icon: FolderArchive, badge: '대량' },
   { id: 'validator', label: '데이터 검증기', icon: CheckSquare, badge: 'YOLO/VOC' },
@@ -251,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           </div>
 
           <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 px-3 py-1 uppercase tracking-wider mb-1">
-            전체 18대 모듈 바로가기
+            전체 20대 모듈 바로가기
           </div>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Camera, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Camera, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain, Maximize, SlidersHorizontal } from 'lucide-react';
 
 interface HeroProps {
   onScrollToDetector?: () => void;
@@ -10,6 +10,8 @@ interface HeroProps {
   onScrollToModels?: () => void;
   onScrollToLighting?: () => void;
   onScrollToCamera?: () => void;
+  onScrollToCameraSix?: () => void;
+  onScrollToPixel?: () => void;
   onScrollToSimulator: () => void;
   onScrollToBatch?: () => void;
   onScrollToPresets?: () => void;
@@ -26,6 +28,8 @@ export const Hero: React.FC<HeroProps> = ({
   onScrollToModels,
   onScrollToLighting,
   onScrollToCamera,
+  onScrollToCameraSix,
+  onScrollToPixel,
   onScrollToSimulator, 
   onScrollToBatch,
   onScrollToPresets,
@@ -170,6 +174,26 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <Camera className="w-4 h-4 text-white" />
               <span>카메라 광학 플랫폼</span>
+            </button>
+          )}
+
+          {onScrollToCameraSix && (
+            <button
+              onClick={onScrollToCameraSix}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-slate-950" />
+              <span>카메라 6종 비교</span>
+            </button>
+          )}
+
+          {onScrollToPixel && (
+            <button
+              onClick={onScrollToPixel}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Maximize className="w-4 h-4 text-white" />
+              <span>카메라 픽셀 가이드</span>
             </button>
           )}
 
