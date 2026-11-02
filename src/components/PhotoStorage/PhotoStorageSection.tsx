@@ -516,16 +516,85 @@ export const PhotoStorageSection: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-                        <span>4KB 클러스터 슬랙: 약 {((singleKb % 4) * 1000 / 1024).toFixed(1)} MB</span>
-                        <span className="text-sky-400 hover:underline flex items-center gap-0.5">
-                          계산기 보기 <ArrowRight className="w-3 h-3" />
-                        </span>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800">
+                        <span>클러스터 슬랙: 약 {((singleKb % 4) * 1000 / 1024).toFixed(1)} MB</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedResId(res.id);
+                          }}
+                          className="px-2 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white font-semibold flex items-center gap-1 transition-colors text-[10px]"
+                        >
+                          <span>세부내용 보기</span>
+                          <ArrowRight className="w-2.5 h-2.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Selected Card Deep Engineering Detail Panel */}
+            <div className="p-6 rounded-3xl bg-slate-900/95 border-2 border-emerald-500/50 shadow-2xl space-y-4 animate-fadeIn">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-black text-white">{activeRes.name}</span>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        {activeRes.width} × {activeRes.height} ({activeRes.megapixels}M)
+                      </span>
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/40">
+                        선택 포맷: {activeFormat.name.split(' ')[0]}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">{activeRes.useCase}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] text-slate-400 block font-mono">1,000장 디렉토리 저장 용량</span>
+                  <span className="text-xl font-mono font-bold text-emerald-400">
+                    {((activeRes.sizeEstimatesKb[selectedFormatId] * 1000) / 1024 / 1024).toFixed(2)} GB
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+                <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                  <span className="text-slate-400 text-[10px] block">사진 1장 순수 파일 크기:</span>
+                  <span className="text-amber-400 font-bold text-sm">
+                    {activeRes.sizeEstimatesKb[selectedFormatId] >= 1024
+                      ? `${(activeRes.sizeEstimatesKb[selectedFormatId] / 1024).toFixed(2)} MB`
+                      : `${activeRes.sizeEstimatesKb[selectedFormatId]} KB`}
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                  <span className="text-slate-400 text-[10px] block">비압축 24비트 대비 압축률:</span>
+                  <span className="text-sky-400 font-bold text-sm">
+                    {(100 - (activeRes.sizeEstimatesKb[selectedFormatId] / activeRes.sizeEstimatesKb.raw24) * 100).toFixed(1)}% 절감
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                  <span className="text-slate-400 text-[10px] block">1,000장 전송 시간 (1Gbps):</span>
+                  <span className="text-emerald-400 font-bold text-sm">
+                    {(((activeRes.sizeEstimatesKb[selectedFormatId] * 1000) / 1024) / 100).toFixed(1)} 초
+                  </span>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
+                  <span className="text-slate-400 text-[10px] block">4KB 클러스터 슬랙 손실:</span>
+                  <span className="text-rose-400 font-bold text-sm">
+                    약 {(((activeRes.sizeEstimatesKb[selectedFormatId] % 4) * 1000) / 1024).toFixed(2)} MB
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                <strong>공학적 분석:</strong> {activeRes.name} 해상도({activeRes.width}x{activeRes.height})에서 {activeFormat.name.split(' ')[0]} 포맷으로 저장 시, 1,000장의 사진은 약 {((activeRes.sizeEstimatesKb[selectedFormatId] * 1000) / 1024 / 1024).toFixed(2)} GB의 디스크 공간을 차지합니다. 리눅스 ext4 파일시스템에서는 약 350KB의 디렉토리 Inode 메타데이터가 추가로 소비되며, AI 추론 시 VRAM에는 비압축 {((activeRes.width * activeRes.height * 3) / (1024 * 1024)).toFixed(1)} MB 크기로 디코딩되어 메모리에 적재됩니다.
+              </div>
             </div>
 
             {/* Quick Action Banner to open Calculator */}

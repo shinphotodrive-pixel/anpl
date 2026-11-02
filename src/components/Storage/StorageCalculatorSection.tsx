@@ -446,7 +446,7 @@ export const StorageCalculatorSection: React.FC = () => {
                         onClick={() => setSelectedResId(res.id)}
                         className={`p-2 rounded-xl text-xs font-medium border text-center transition-all ${
                           selectedResId === res.id
-                            ? 'bg-sky-500 text-slate-950 font-bold border-sky-400 shadow-md'
+                            ? 'bg-sky-500 text-slate-950 font-bold border-sky-400 shadow-md ring-2 ring-sky-400/30'
                             : 'bg-slate-900/70 border-slate-700 hover:bg-slate-700/60 text-slate-300'
                         }`}
                       >
@@ -454,6 +454,21 @@ export const StorageCalculatorSection: React.FC = () => {
                         <div className="text-[10px] opacity-75 font-mono">{res.megapixels}M</div>
                       </button>
                     ))}
+                  </div>
+
+                  {/* Selected Resolution Detail Card */}
+                  <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-500/30 text-xs space-y-1.5 animate-fadeIn">
+                    <div className="flex items-center justify-between text-sky-300 font-bold text-[11px]">
+                      <span>선택 해상도 공학 분석: {activeRes.name}</span>
+                      <span className="font-mono text-[10px] text-slate-400">{activeRes.width} × {activeRes.height} px</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-snug">
+                      {activeRes.useCase}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1 border-t border-sky-500/20">
+                      <span>비압축 원본 대역폭: {((activeRes.width * activeRes.height * 24 * fps) / 1e9).toFixed(2)} Gbps</span>
+                      <span>1080p 대비 픽셀: x{activeRes.pixelRatio.toFixed(2)}배</span>
+                    </div>
                   </div>
                 </div>
 
@@ -651,6 +666,21 @@ export const StorageCalculatorSection: React.FC = () => {
                           </option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Selected RAID Mode Detail Card */}
+                  <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs space-y-1.5 animate-fadeIn">
+                    <div className="flex items-center justify-between text-indigo-300 font-bold text-[11px]">
+                      <span>선택 RAID 아키텍처: {activeRaid.name}</span>
+                      <span className="font-mono text-[10px] text-amber-400">장애 허용: {activeRaid.faultTolerance}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-snug">
+                      {activeRaid.desc}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-800">
+                      <span>최소 디스크: {activeRaid.minDisks}대 이상</span>
+                      <span>실효 저장 효율: {(activeRaid.efficiencyFormula(diskCount) * 100).toFixed(0)}%</span>
                     </div>
                   </div>
 

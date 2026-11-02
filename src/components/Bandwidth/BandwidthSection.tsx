@@ -376,6 +376,24 @@ export const BandwidthSection: React.FC = () => {
                       FHD 120 FPS
                     </button>
                   </div>
+
+                  {/* Selected Preset Details */}
+                  <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-500/30 text-xs space-y-1 animate-fadeIn">
+                    <div className="flex items-center justify-between text-sky-300 font-bold text-[11px]">
+                      <span>선택 사양 공학 분석: {customWidth} × {customHeight} @ {customFps}fps</span>
+                      <span className="font-mono text-[10px] text-amber-400">
+                        순수 원본: {((customWidth * customHeight * 24 * customFps) / 1e9).toFixed(2)} Gbps
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      {customWidth === 1920 && customHeight === 1080 && customFps === 30 && '단일 차로 기본 관제 사양. USB 3.0(5Gbps) 대역폭의 37%를 차지하여 매우 안정적입니다.'}
+                      {customWidth === 1920 && customHeight === 1080 && customFps === 60 && '고속도로 100km/h+ 과속 단속 권장. USB 3.0 실효 대역폭의 약 75%를 차지합니다.'}
+                      {customWidth === 2560 && customHeight === 1440 && customFps === 60 && '2차로 동시 감시 머신비전. USB 3.0 실효 한계(4.0G)를 초과하므로 USB 3.1(10G) 필수.'}
+                      {customWidth === 3840 && customHeight === 2160 && customFps === 30 && '3차로 광역 교차로 감시. USB 3.1(10G) 포트 직결 필요 (6.0 Gbps 필요).'}
+                      {customWidth === 3840 && customHeight === 2160 && customFps === 60 && '초고속 다차선 최고급 사양. 11.9 Gbps 대역폭으로 USB 3.2 20Gbps 필수.'}
+                      {customWidth === 1920 && customHeight === 1080 && customFps === 120 && '초고속 열차/특수 계측용 초당 120프레임. 6.0 Gbps 대역폭 요구.'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Resolution Inputs */}
