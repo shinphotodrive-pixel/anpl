@@ -31,6 +31,7 @@ import {
   HardDrive,
   Images,
   FileType,
+  Cable,
   Sun,
   Moon
 } from 'lucide-react';
@@ -57,6 +58,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'see3cam-24cug', label: 'See3CAM_24CUG', icon: Radio, badge: 'AR0234CS' },
   { id: 'pixel', label: '픽셀', icon: Maximize, badge: '해상도' },
   { id: 'bandwidth', label: '대역폭', icon: Gauge, badge: 'USB 전송' },
+  { id: 'interface', label: '인터페이스', icon: Cable, badge: '4대 규격' },
   { id: 'storage', label: '스토리지', icon: HardDrive, badge: '용량 계산' },
   { id: 'photo', label: '사진', icon: Images, badge: '1000장 계산' },
   { id: 'format', label: '포맷', icon: FileType, badge: '특징/응용' },

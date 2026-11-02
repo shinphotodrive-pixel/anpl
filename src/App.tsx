@@ -18,6 +18,7 @@ import { CameraSixSection } from './components/CameraSix/CameraSixSection';
 import { See3Cam24CugSection } from './components/See3CAM/See3Cam24CugSection';
 import { PixelResolutionSection } from './components/Pixel/PixelResolutionSection';
 import { BandwidthSection } from './components/Bandwidth/BandwidthSection';
+import { CameraInterfaceSection } from './components/CameraInterface/CameraInterfaceSection';
 import { StorageCalculatorSection } from './components/Storage/StorageCalculatorSection';
 import { PhotoStorageSection } from './components/PhotoStorage/PhotoStorageSection';
 import { ImageFormatGuideSection } from './components/ImageFormat/ImageFormatGuideSection';
@@ -111,6 +112,9 @@ export default function App() {
 
       case 'bandwidth':
         return <BandwidthSection />;
+
+      case 'interface':
+        return <CameraInterfaceSection />;
 
       case 'storage':
         return <StorageCalculatorSection />;

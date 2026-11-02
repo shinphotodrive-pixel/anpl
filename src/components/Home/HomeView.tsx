@@ -26,6 +26,7 @@ import {
   HardDrive,
   Images,
   FileType,
+  Cable,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -181,6 +182,17 @@ const MODULE_CARDS: ModuleCard[] = [
     color: 'from-sky-500/20 to-blue-500/10 border-sky-500/40 text-sky-400',
     badge: '대역폭·USB',
     stats: '80% 실효 룰 & 계산기'
+  },
+  {
+    id: 'interface',
+    title: '4대 주요 카메라 인터페이스 정밀 사양',
+    subTitle: 'Physical Layer, Bandwidth & System Latency Guide',
+    description: 'MIPI CSI-2(Jetson 초저지연), USB 3.0(플러그앤플레이), GMSL2(차량 전장 SerDes 15m), GigE(100m 장거리 PoE) 4대 인터페이스 사양 정밀 비교.',
+    icon: Cable,
+    category: 'vision',
+    color: 'from-indigo-500/20 to-cyan-500/10 border-indigo-500/40 text-indigo-400',
+    badge: '4대 인터페이스',
+    stats: '물리 계층 & 레이턴시'
   },
   {
     id: 'storage',
