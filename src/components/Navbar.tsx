@@ -27,6 +27,10 @@ import {
   Maximize,
   SlidersHorizontal,
   Radio,
+  Gauge,
+  HardDrive,
+  Images,
+  FileType,
   Sun,
   Moon
 } from 'lucide-react';
@@ -52,6 +56,10 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'camera-6', label: '카메라 6종', icon: SlidersHorizontal, badge: '글로벌셔터' },
   { id: 'see3cam-24cug', label: 'See3CAM_24CUG', icon: Radio, badge: 'AR0234CS' },
   { id: 'pixel', label: '픽셀', icon: Maximize, badge: '해상도' },
+  { id: 'bandwidth', label: '대역폭', icon: Gauge, badge: 'USB 전송' },
+  { id: 'storage', label: '스토리지', icon: HardDrive, badge: '용량 계산' },
+  { id: 'photo', label: '사진', icon: Images, badge: '1000장 계산' },
+  { id: 'format', label: '포맷', icon: FileType, badge: '특징/응용' },
   { id: 'simulator', label: '증강 시뮬레이터', icon: Sliders, badge: '시뮬' },
   { id: 'batch', label: '배치 처리기', icon: FolderArchive, badge: '대량' },
   { id: 'validator', label: '데이터 검증기', icon: CheckSquare, badge: 'YOLO/VOC' },
@@ -257,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           </div>
 
           <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 px-3 py-1 uppercase tracking-wider mb-1">
-            전체 21대 모듈 바로가기
+            전체 24대 모듈 바로가기
           </div>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;

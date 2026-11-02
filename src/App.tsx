@@ -17,6 +17,10 @@ import { CameraTechSection } from './components/Camera/CameraTechSection';
 import { CameraSixSection } from './components/CameraSix/CameraSixSection';
 import { See3Cam24CugSection } from './components/See3CAM/See3Cam24CugSection';
 import { PixelResolutionSection } from './components/Pixel/PixelResolutionSection';
+import { BandwidthSection } from './components/Bandwidth/BandwidthSection';
+import { StorageCalculatorSection } from './components/Storage/StorageCalculatorSection';
+import { PhotoStorageSection } from './components/PhotoStorage/PhotoStorageSection';
+import { ImageFormatGuideSection } from './components/ImageFormat/ImageFormatGuideSection';
 import { SimulatorView } from './components/Simulator/SimulatorView';
 import { BatchProcessorSection } from './components/BatchProcessor/BatchProcessorSection';
 import { DataValidatorSection } from './components/DataValidator/DataValidatorSection';
@@ -104,6 +108,18 @@ export default function App() {
 
       case 'pixel':
         return <PixelResolutionSection />;
+
+      case 'bandwidth':
+        return <BandwidthSection />;
+
+      case 'storage':
+        return <StorageCalculatorSection />;
+
+      case 'photo':
+        return <PhotoStorageSection />;
+
+      case 'format':
+        return <ImageFormatGuideSection />;
 
       case 'simulator':
         return <SimulatorView sharedParams={params} setSharedParams={setParams} />;
@@ -230,7 +246,7 @@ export default function App() {
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 transition-all hover:scale-[1.01]"
               >
                 <Layers className="w-4 h-4 text-sky-500" />
-                <span>전체 21대 모듈 홈으로</span>
+                <span>전체 24대 모듈 홈으로</span>
               </button>
 
               {nextTab ? (

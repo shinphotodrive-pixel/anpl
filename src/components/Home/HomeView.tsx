@@ -22,6 +22,10 @@ import {
   Maximize,
   SlidersHorizontal,
   Radio,
+  Gauge,
+  HardDrive,
+  Images,
+  FileType,
   ArrowRight,
   Sparkles,
   ExternalLink,
@@ -168,6 +172,50 @@ const MODULE_CARDS: ModuleCard[] = [
     stats: '12종 해상도 & PPM 계산기'
   },
   {
+    id: 'bandwidth',
+    title: '카메라 대역폭 & USB 규격 가이드',
+    subTitle: 'Video Bandwidth & USB Interface Lab',
+    description: '비압축 24비트 RGB, YUV422 색차 압축, H.264/MJPEG 포맷별 요구 대역폭 실시간 연산 및 USB 3.0/3.1/3.2 80% 실효 전송 규격 검증.',
+    icon: Gauge,
+    category: 'vision',
+    color: 'from-sky-500/20 to-blue-500/10 border-sky-500/40 text-sky-400',
+    badge: '대역폭·USB',
+    stats: '80% 실효 룰 & 계산기'
+  },
+  {
+    id: 'storage',
+    title: '카메라 스토리지 용량 계산기',
+    subTitle: 'NVR Capacity & Retention Estimator',
+    description: '해상도(HD~4K), 코덱(H.265, H.264, MJPEG, RAW), FPS, 채널 수 및 보관 일수에 따른 스토리지 소요량(TB) 산출 및 감시용 HDD/RAID 추천.',
+    icon: HardDrive,
+    category: 'vision',
+    color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/40 text-emerald-400',
+    badge: '스토리지 계산',
+    stats: '보관일수 & RAID 견적'
+  },
+  {
+    id: 'photo',
+    title: '사진 스토리지 계산기',
+    subTitle: 'Resolution Photo & 1,000-Image Directory Capacity',
+    description: '해상도별(HD~12M) 대표 차량 사진 1장씩 수록 및 1,000장 디렉토리 저장 시 실소요 용량(MB/GB)과 4KB 클러스터 슬랙(Slack) 오버헤드 산출.',
+    icon: Images,
+    category: 'vision',
+    color: 'from-purple-500/20 to-indigo-500/10 border-purple-500/40 text-purple-400',
+    badge: '1000장 디렉토리',
+    stats: '6대 해상도 사진 & 슬랙 분석'
+  },
+  {
+    id: 'format',
+    title: '이미지 사진 포맷별 특징 및 적용 가이드',
+    subTitle: 'JPEG · WebP · PNG · RAW Technical & Application Lab',
+    description: 'JPEG(손실 DCT/표준), WebP(차세대 고효율), PNG(무손실 투명도), RAW(센서 원본 24비트)의 핵심 기술 특성과 ITS/ALPR 실무 6대 현장 응용 가이드.',
+    icon: FileType,
+    category: 'vision',
+    color: 'from-amber-500/20 to-orange-500/10 border-amber-500/40 text-amber-400',
+    badge: '포맷 비교/응용',
+    stats: '4대 포맷 & 실무 적용 매트릭스'
+  },
+  {
     id: 'simulator',
     title: '증강 시뮬레이터 (Simulator)',
     subTitle: 'Interactive Augmentation Engine',
@@ -295,6 +343,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         onScrollToCameraSix={() => onNavigate('camera-6')}
         onScrollToSee3Cam={() => onNavigate('see3cam-24cug')}
         onScrollToPixel={() => onNavigate('pixel')}
+        onScrollToBandwidth={() => onNavigate('bandwidth')}
+        onScrollToStorage={() => onNavigate('storage')}
+        onScrollToPhoto={() => onNavigate('photo')}
         onScrollToSimulator={() => onNavigate('simulator')}
         onScrollToBatch={() => onNavigate('batch')}
         onScrollToPresets={() => onNavigate('presets')}
@@ -310,14 +361,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <span>ALPR Complete Suite Directory</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            ALPR 21대 핵심 모듈 전체 둘러보기
+            ALPR 24대 핵심 모듈 전체 둘러보기
           </h2>
           <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             원하시는 메뉴 탭을 선택하시면 스크롤 없이 해당 페이지로 독립 전환되어 상세 연구 자료 및 인터랙티브 툴을 사용하실 수 있습니다.
           </p>
         </div>
 
-        {/* Grid of 21 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
+        {/* Grid of 24 Modules: 1 col mobile, 2 cols tablet (sm), 4 cols desktop (lg) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {MODULE_CARDS.map((item) => {
             const Icon = item.icon;

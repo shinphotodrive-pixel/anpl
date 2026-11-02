@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Camera, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain, Maximize, SlidersHorizontal, Radio } from 'lucide-react';
+import { Sliders, Sparkles, AlertCircle, ArrowDown, Bookmark, ScanLine, Lightbulb, Camera, Cpu, FolderArchive, CircuitBoard, BookOpen, GraduationCap, Brain, Maximize, SlidersHorizontal, Radio, Gauge, HardDrive, Images } from 'lucide-react';
 
 interface HeroProps {
   onScrollToDetector?: () => void;
@@ -13,6 +13,9 @@ interface HeroProps {
   onScrollToCameraSix?: () => void;
   onScrollToSee3Cam?: () => void;
   onScrollToPixel?: () => void;
+  onScrollToBandwidth?: () => void;
+  onScrollToStorage?: () => void;
+  onScrollToPhoto?: () => void;
   onScrollToSimulator: () => void;
   onScrollToBatch?: () => void;
   onScrollToPresets?: () => void;
@@ -32,6 +35,9 @@ export const Hero: React.FC<HeroProps> = ({
   onScrollToCameraSix,
   onScrollToSee3Cam,
   onScrollToPixel,
+  onScrollToBandwidth,
+  onScrollToStorage,
+  onScrollToPhoto,
   onScrollToSimulator, 
   onScrollToBatch,
   onScrollToPresets,
@@ -206,6 +212,36 @@ export const Hero: React.FC<HeroProps> = ({
             >
               <Maximize className="w-4 h-4 text-white" />
               <span>카메라 픽셀 가이드</span>
+            </button>
+          )}
+
+          {onScrollToBandwidth && (
+            <button
+              onClick={onScrollToBandwidth}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-sky-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Gauge className="w-4 h-4 text-sky-200" />
+              <span>대역폭 & USB 규격</span>
+            </button>
+          )}
+
+          {onScrollToStorage && (
+            <button
+              onClick={onScrollToStorage}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <HardDrive className="w-4 h-4 text-emerald-200" />
+              <span>스토리지 계산기</span>
+            </button>
+          )}
+
+          {onScrollToPhoto && (
+            <button
+              onClick={onScrollToPhoto}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Images className="w-4 h-4 text-purple-200" />
+              <span>사진 스토리지 계산기</span>
             </button>
           )}
 
